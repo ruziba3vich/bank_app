@@ -1,0 +1,220 @@
+basePath: /api/v1
+definitions:
+  dto.AuthResponse:
+    properties:
+      access_token:
+        type: string
+      refresh_token:
+        type: string
+      user:
+        $ref: '#/definitions/dto.UserResponse'
+    type: object
+  dto.ErrorResponse:
+    properties:
+      error:
+        type: string
+    type: object
+  dto.LoginRequest:
+    properties:
+      device_id:
+        type: string
+      login:
+        type: string
+      password:
+        type: string
+    required:
+    - device_id
+    - login
+    - password
+    type: object
+  dto.RefreshRequest:
+    properties:
+      device_id:
+        type: string
+      refresh_token:
+        type: string
+    required:
+    - device_id
+    - refresh_token
+    type: object
+  dto.RegisterRequest:
+    properties:
+      full_name:
+        type: string
+      login:
+        minLength: 3
+        type: string
+      password:
+        minLength: 8
+        type: string
+      role:
+        type: string
+    required:
+    - full_name
+    - login
+    - password
+    type: object
+  dto.UserResponse:
+    properties:
+      created_at:
+        type: string
+      full_name:
+        type: string
+      id:
+        type: string
+      login:
+        type: string
+      role:
+        type: string
+      status:
+        type: boolean
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: Authentication service for the Bank App
+  title: Bank App API
+  version: "1.0"
+paths:
+  /users/login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticates user and returns access and refresh tokens
+      parameters:
+      - description: Login credentials
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Login successful
+          schema:
+            $ref: '#/definitions/dto.AuthResponse'
+        "400":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "401":
+          description: Invalid credentials
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "403":
+          description: User account is inactive
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Login user
+      tags:
+      - users
+  /users/logout:
+    post:
+      description: Invalidates all active sessions for the authenticated user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Logged out successfully
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Logout user
+      tags:
+      - users
+  /users/refresh:
+    post:
+      consumes:
+      - application/json
+      description: Rotates the refresh token and returns a new token pair
+      parameters:
+      - description: Refresh token and device ID
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.RefreshRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Tokens refreshed successfully
+          schema:
+            $ref: '#/definitions/dto.AuthResponse'
+        "400":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "401":
+          description: Invalid or expired refresh token
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "403":
+          description: User account is inactive
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Refresh access token
+      tags:
+      - users
+  /users/register:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new user account with the provided details
+      parameters:
+      - description: Registration details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: User created successfully
+          schema:
+            $ref: '#/definitions/dto.UserResponse'
+        "400":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "409":
+          description: Login already exists
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Register a new user
+      tags:
+      - users
+securityDefinitions:
+  BearerAuth:
+    description: Enter "Bearer {token}"
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
