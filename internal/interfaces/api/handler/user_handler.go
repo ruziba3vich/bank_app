@@ -20,6 +20,18 @@ func NewUserHandler(userService *appuser.Service) *UserHandler {
 	return &UserHandler{userService: userService}
 }
 
+// Register godoc
+// @Summary Register a new user
+// @Description Creates a new user account with the provided details
+// @Tags users
+// @Accept json
+// @Produce json
+// @Param request body dto.RegisterRequest true "Registration details"
+// @Success 201 {object} dto.UserResponse "User created successfully"
+// @Failure 400 {object} dto.ErrorResponse "Validation error"
+// @Failure 409 {object} dto.ErrorResponse "Login already exists"
+// @Failure 500 {object} dto.ErrorResponse "Internal server error"
+// @Router /users/register [post]
 func (h *UserHandler) Register(c *gin.Context) {
 	var req dto.RegisterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -41,6 +53,19 @@ func (h *UserHandler) Register(c *gin.Context) {
 	c.JSON(http.StatusCreated, dto.NewUserResponse(user))
 }
 
+// Login godoc
+// @Summary Login user
+// @Description Authenticates user and returns access and refresh tokens
+// @Tags users
+// @Accept json
+// @Produce json
+// @Param request body dto.LoginRequest true "Login credentials"
+// @Success 200 {object} dto.AuthResponse "Login successful"
+// @Failure 400 {object} dto.ErrorResponse "Validation error"
+// @Failure 401 {object} dto.ErrorResponse "Invalid credentials"
+// @Failure 403 {object} dto.ErrorResponse "User account is inactive"
+// @Failure 500 {object} dto.ErrorResponse "Internal server error"
+// @Router /users/login [post]
 func (h *UserHandler) Login(c *gin.Context) {
 	var req dto.LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -61,6 +86,19 @@ func (h *UserHandler) Login(c *gin.Context) {
 	c.JSON(http.StatusOK, dto.NewAuthResponse(output.AccessToken, output.RefreshToken, output.User))
 }
 
+// Refresh godoc
+// @Summary Refresh access token
+// @Description Rotates the refresh token and returns a new token pair
+// @Tags users
+// @Accept json
+// @Produce json
+// @Param request body dto.RefreshRequest true "Refresh token and device ID"
+// @Success 200 {object} dto.AuthResponse "Tokens refreshed successfully"
+// @Failure 400 {object} dto.ErrorResponse "Validation error"
+// @Failure 401 {object} dto.ErrorResponse "Invalid or expired refresh token"
+// @Failure 403 {object} dto.ErrorResponse "User account is inactive"
+// @Failure 500 {object} dto.ErrorResponse "Internal server error"
+// @Router /users/refresh [post]
 func (h *UserHandler) Refresh(c *gin.Context) {
 	var req dto.RefreshRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -80,6 +118,16 @@ func (h *UserHandler) Refresh(c *gin.Context) {
 	c.JSON(http.StatusOK, dto.NewAuthResponse(output.AccessToken, output.RefreshToken, output.User))
 }
 
+// Logout godoc
+// @Summary Logout user
+// @Description Invalidates all active sessions for the authenticated user
+// @Tags users
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} map[string]string "Logged out successfully"
+// @Failure 401 {object} dto.ErrorResponse "Unauthorized"
+// @Failure 500 {object} dto.ErrorResponse "Internal server error"
+// @Router /users/logout [post]
 func (h *UserHandler) Logout(c *gin.Context) {
 	userIDVal, exists := c.Get("user_id")
 	if !exists {
