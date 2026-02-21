@@ -8,6 +8,7 @@ import (
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 
 	"github.com/prodonik/bank_app/config"
+	_ "github.com/prodonik/bank_app/docs"
 	appuser "github.com/prodonik/bank_app/internal/application/user"
 	"github.com/prodonik/bank_app/internal/infrastructure/auth"
 	"github.com/prodonik/bank_app/internal/infrastructure/database"
@@ -16,8 +17,17 @@ import (
 	"github.com/prodonik/bank_app/internal/interfaces/api/handler"
 )
 
+// @title Bank App API
+// @version 1.0
+// @description Authentication service for the Bank App
+// @host localhost:8080
+// @BasePath /api/v1
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+// @description Enter "Bearer {token}"
 func main() {
-	cfg, err := config.Load()	
+	cfg, err := config.Load()
 	if err != nil {
 		log.Fatalf("failed to load config: %v", err)
 	}
