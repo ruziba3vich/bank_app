@@ -4,6 +4,8 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 
 	"github.com/prodonik/bank_app/internal/infrastructure/auth"
 	"github.com/prodonik/bank_app/internal/interfaces/api/handler"
@@ -16,6 +18,8 @@ func NewRouter(userHandler *handler.UserHandler, jwtService *auth.JWTService) *g
 	r.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "ok"})
 	})
+
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	v1 := r.Group("/api/v1")
 	{
