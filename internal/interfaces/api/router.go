@@ -1,6 +1,8 @@
 package api
 
 import (
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 
 	"github.com/prodonik/bank_app/internal/infrastructure/auth"
@@ -10,6 +12,10 @@ import (
 
 func NewRouter(userHandler *handler.UserHandler, jwtService *auth.JWTService) *gin.Engine {
 	r := gin.Default()
+
+	r.GET("/health", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{"status": "ok"})
+	})
 
 	v1 := r.Group("/api/v1")
 	{
