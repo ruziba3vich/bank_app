@@ -16,6 +16,33 @@ type City struct {
 	CreatedAt time.Time
 }
 
+type Entrepreneur struct {
+	ID                    uuid.UUID
+	InnID                 uuid.UUID
+	LegalName             string
+	RegistrationAuthority string
+	RegistrationDate      string
+	RegistrationNumber    string
+	LegalForm             string
+	IfutCode              int32
+	DbibtCode             int32
+	ActivityStatus        bool
+	CharterFund           int32
+	Founders              string
+	Email                 string
+	Phone                 string
+	MhobtCode             string
+	Address               string
+	DirectorName          string
+	CreatedAt             time.Time
+}
+
+type Inn struct {
+	ID        uuid.UUID
+	Name      string
+	CreatedAt time.Time
+}
+
 type User struct {
 	ID           uuid.UUID
 	FullName     string
