@@ -47,6 +47,12 @@ type RefreshInput struct {
 	DeviceID     string
 }
 
+type UpdateInput struct {
+	FullName *string
+	Role     *string
+	Status   *bool
+}
+
 type AuthOutput struct {
 	AccessToken  string
 	RefreshToken string
@@ -123,7 +129,6 @@ func (s *Service) Refresh(ctx context.Context, input RefreshInput) (*AuthOutput,
 		return nil, domain.ErrUserInactive
 	}
 
-	// Generate new token pair (rotation)
 	tokenPair, err := s.jwtService.GenerateTokenPair(u.ID, u.Role)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate tokens: %w", err)
@@ -145,6 +150,50 @@ func (s *Service) Logout(ctx context.Context, userID uuid.UUID) error {
 	return s.sessionRepo.DeleteByUserID(ctx, userID)
 }
 
+func (s *Service) GetByID(ctx context.Context, id uuid.UUID) (*domain.User, error) {
+	return s.userRepo.GetByID(ctx, id)
+}
+
+func (s *Service) GetAll(ctx context.Context, filter domain.UserFilter) ([]*domain.User, int, error) {
+	if filter.Limit <= 0 {
+		filter.Limit = 20
+	}
+	if filter.Limit > 100 {
+		filter.Limit = 100
+	}
+	return s.userRepo.GetAll(ctx, filter)
+}
+
+func (s *Service) Update(ctx context.Context, id uuid.UUID, input UpdateInput) (*domain.User, error) {
+	existing, err := s.userRepo.GetByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	if input.FullName != nil {
+		existing.FullName = *input.FullName
+	}
+	if input.Role != nil {
+		existing.Role = *input.Role
+	}
+	if input.Status != nil {
+		existing.Status = *input.Status
+	}
+
+	return s.userRepo.Update(ctx, existing)
+}
+
+func (s *Service) Delete(ctx context.Context, id uuid.UUID) error {
+	if _, err := s.userRepo.GetByID(ctx, id); err != nil {
+		return err
+	}
+
+	// Delete sessions first
+	_ = s.sessionRepo.DeleteByUserID(ctx, id)
+
+	return s.userRepo.Delete(ctx, id)
+}
+
 func (s *Service) createOrUpdateSession(ctx context.Context, u *domain.User, deviceID string) (*AuthOutput, error) {
 	tokenPair, err := s.jwtService.GenerateTokenPair(u.ID, u.Role)
 	if err != nil {
@@ -153,15 +202,12 @@ func (s *Service) createOrUpdateSession(ctx context.Context, u *domain.User, dev
 
 	refreshTokenHash := auth.HashToken(tokenPair.RefreshToken)
 
-	// Check if session already exists for this device
 	existing, err := s.sessionRepo.GetByUserAndDevice(ctx, u.ID, deviceID)
 	if err == nil && existing != nil {
-		// Update existing session
 		if _, err := s.sessionRepo.UpdateToken(ctx, existing.ID, refreshTokenHash); err != nil {
 			return nil, fmt.Errorf("failed to update session: %w", err)
 		}
 	} else {
-		// Create new session
 		session := &domain.Session{
 			UserID:           u.ID,
 			DeviceID:         deviceID,
