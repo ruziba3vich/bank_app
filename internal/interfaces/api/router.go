@@ -34,13 +34,13 @@ func NewRouter(userHandler *handler.UserHandler, cityHandler *handler.CityHandle
 	{
 		users := v1.Group("/users")
 		{
-			users.POST("/register", userHandler.Register)
 			users.POST("/login", userHandler.Login)
 			users.POST("/refresh", userHandler.Refresh)
 
 			authenticated := users.Group("")
 			authenticated.Use(middleware.AuthMiddleware(jwtService))
 			{
+				authenticated.POST("/register", userHandler.Register)
 				authenticated.POST("/logout", userHandler.Logout)
 				authenticated.GET("/me", userHandler.GetMe)
 				authenticated.GET("", userHandler.GetAll)
