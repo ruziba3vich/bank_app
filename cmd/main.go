@@ -9,6 +9,7 @@ import (
 
 	"github.com/prodonik/bank_app/config"
 	_ "github.com/prodonik/bank_app/docs"
+	appcity "github.com/prodonik/bank_app/internal/application/city"
 	appuser "github.com/prodonik/bank_app/internal/application/user"
 	"github.com/prodonik/bank_app/internal/infrastructure/auth"
 	"github.com/prodonik/bank_app/internal/infrastructure/database"
@@ -52,13 +53,16 @@ func main() {
 	jwtService := auth.NewJWTService(cfg.JWTSecret, cfg.AccessTokenExpiry, cfg.RefreshTokenExpiry)
 	userRepo := repository.NewUserRepository(db)
 	sessionRepo := repository.NewSessionRepository(db)
+	cityRepo := repository.NewCityRepository(db)
 
 	// Application
 	userService := appuser.NewService(userRepo, sessionRepo, jwtService)
+	cityService := appcity.NewService(cityRepo)
 
 	// Interfaces
 	userHandler := handler.NewUserHandler(userService)
-	router := api.NewRouter(userHandler, jwtService)
+	cityHandler := handler.NewCityHandler(cityService)
+	router := api.NewRouter(userHandler, cityHandler, jwtService)
 
 	log.Printf("Starting server on port %s", cfg.ServerPort)
 	if err := router.Run(":" + cfg.ServerPort); err != nil {
