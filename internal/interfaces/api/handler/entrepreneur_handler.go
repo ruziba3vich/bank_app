@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -111,6 +112,8 @@ func (h *EntrepreneurHandler) GetByID(c *gin.Context) {
 // @Param inn_name query string false "Search by INN name (partial match)"
 // @Param activity_status query bool false "Filter by activity status"
 // @Param director_name query string false "Search by director name (partial match)"
+// @Param date_from query string false "Filter from date (YYYY-MM-DD, e.g. 2024-01-01)"
+// @Param date_to query string false "Filter to date inclusive (YYYY-MM-DD, e.g. 2024-12-31)"
 // @Param limit query int false "Limit (default 20, max 100)"
 // @Param offset query int false "Offset (default 0)"
 // @Success 200 {object} dto.EntrepreneurListResponse "Entrepreneurs list"
@@ -233,6 +236,22 @@ func parseEntrepreneurFilter(c *gin.Context) (domain.EntrepreneurFilter, error) 
 	}
 	if v := c.Query("director_name"); v != "" {
 		filter.DirectorName = &v
+	}
+	if v := c.Query("date_from"); v != "" {
+		t, err := time.Parse("2006-01-02", v)
+		if err != nil {
+			return filter, errors.New("invalid date_from parameter, use YYYY-MM-DD format")
+		}
+		filter.DateFrom = &t
+	}
+	if v := c.Query("date_to"); v != "" {
+		t, err := time.Parse("2006-01-02", v)
+		if err != nil {
+			return filter, errors.New("invalid date_to parameter, use YYYY-MM-DD format")
+		}
+		// Set to end of day to make it inclusive
+		endOfDay := t.Add(24*time.Hour - time.Nanosecond)
+		filter.DateTo = &endOfDay
 	}
 
 	filter.Limit = 20

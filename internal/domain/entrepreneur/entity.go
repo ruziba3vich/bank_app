@@ -33,6 +33,8 @@ type EntrepreneurFilter struct {
 	InnName        *string
 	ActivityStatus *bool
 	DirectorName   *string
+	DateFrom       *time.Time
+	DateTo         *time.Time
 	Limit          int
 	Offset         int
 }

@@ -117,6 +117,16 @@ func (r *EntrepreneurRepository) GetAll(ctx context.Context, filter domain.Entre
 		args = append(args, "%"+*filter.DirectorName+"%")
 		paramIdx++
 	}
+	if filter.DateFrom != nil {
+		conditions = append(conditions, fmt.Sprintf("e.created_at >= $%d", paramIdx))
+		args = append(args, *filter.DateFrom)
+		paramIdx++
+	}
+	if filter.DateTo != nil {
+		conditions = append(conditions, fmt.Sprintf("e.created_at <= $%d", paramIdx))
+		args = append(args, *filter.DateTo)
+		paramIdx++
+	}
 
 	var where string
 	if len(conditions) > 0 {
