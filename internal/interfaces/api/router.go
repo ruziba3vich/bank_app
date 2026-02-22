@@ -33,6 +33,11 @@ func NewRouter(userHandler *handler.UserHandler, jwtService *auth.JWTService) *g
 			authenticated.Use(middleware.AuthMiddleware(jwtService))
 			{
 				authenticated.POST("/logout", userHandler.Logout)
+				authenticated.GET("/me", userHandler.GetMe)
+				authenticated.GET("", userHandler.GetAll)
+				authenticated.GET("/:id", userHandler.GetByID)
+				authenticated.PUT("/:id", userHandler.Update)
+				authenticated.DELETE("/:id", userHandler.Delete)
 			}
 		}
 	}
