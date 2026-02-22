@@ -1,0 +1,265 @@
+package handler
+
+import (
+	"errors"
+	"net/http"
+	"strconv"
+
+	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
+
+	appent "github.com/prodonik/bank_app/internal/application/entrepreneur"
+	domain "github.com/prodonik/bank_app/internal/domain/entrepreneur"
+	"github.com/prodonik/bank_app/internal/interfaces/api/dto"
+)
+
+type EntrepreneurHandler struct {
+	entrepreneurService *appent.Service
+}
+
+func NewEntrepreneurHandler(entrepreneurService *appent.Service) *EntrepreneurHandler {
+	return &EntrepreneurHandler{entrepreneurService: entrepreneurService}
+}
+
+// CreateEntrepreneur godoc
+// @Summary Create a new entrepreneur
+// @Description Creates a new entrepreneur. If the INN name exists, it binds the existing INN; otherwise creates a new one.
+// @Tags entrepreneurs
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param request body dto.CreateEntrepreneurRequest true "Entrepreneur details"
+// @Success 201 {object} dto.EntrepreneurResponse "Entrepreneur created"
+// @Failure 400 {object} dto.ErrorResponse "Validation error"
+// @Failure 401 {object} dto.ErrorResponse "Unauthorized"
+// @Failure 500 {object} dto.ErrorResponse "Internal server error"
+// @Router /entrepreneurs [post]
+func (h *EntrepreneurHandler) Create(c *gin.Context) {
+	var req dto.CreateEntrepreneurRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, dto.ErrorResponse{Error: err.Error()})
+		return
+	}
+
+	activityStatus := true
+	if req.ActivityStatus != nil {
+		activityStatus = *req.ActivityStatus
+	}
+
+	e, err := h.entrepreneurService.Create(c.Request.Context(), appent.CreateInput{
+		InnName:               req.Inn,
+		LegalName:             req.LegalName,
+		RegistrationAuthority: req.RegistrationAuthority,
+		RegistrationDate:      req.RegistrationDate,
+		RegistrationNumber:    req.RegistrationNumber,
+		LegalForm:             req.LegalForm,
+		IfutCode:              req.IfutCode,
+		DbibtCode:             req.DbibtCode,
+		ActivityStatus:        activityStatus,
+		CharterFund:           req.CharterFund,
+		Founders:              req.Founders,
+		Email:                 req.Email,
+		Phone:                 req.Phone,
+		MhobtCode:             req.MhobtCode,
+		Address:               req.Address,
+		DirectorName:          req.DirectorName,
+	})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, dto.ErrorResponse{Error: "internal server error"})
+		return
+	}
+
+	c.JSON(http.StatusCreated, dto.NewEntrepreneurResponse(e))
+}
+
+// GetEntrepreneurByID godoc
+// @Summary Get entrepreneur by ID
+// @Description Returns an entrepreneur by its UUID
+// @Tags entrepreneurs
+// @Produce json
+// @Security BearerAuth
+// @Param id path string true "Entrepreneur ID (UUID)"
+// @Success 200 {object} dto.EntrepreneurResponse "Entrepreneur found"
+// @Failure 400 {object} dto.ErrorResponse "Invalid UUID"
+// @Failure 401 {object} dto.ErrorResponse "Unauthorized"
+// @Failure 404 {object} dto.ErrorResponse "Entrepreneur not found"
+// @Failure 500 {object} dto.ErrorResponse "Internal server error"
+// @Router /entrepreneurs/{id} [get]
+func (h *EntrepreneurHandler) GetByID(c *gin.Context) {
+	id, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, dto.ErrorResponse{Error: "invalid entrepreneur id"})
+		return
+	}
+
+	e, err := h.entrepreneurService.GetByID(c.Request.Context(), id)
+	if err != nil {
+		handleEntrepreneurError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, dto.NewEntrepreneurResponse(e))
+}
+
+// GetAllEntrepreneurs godoc
+// @Summary Get all entrepreneurs
+// @Description Returns a paginated list of entrepreneurs with optional filters
+// @Tags entrepreneurs
+// @Produce json
+// @Security BearerAuth
+// @Param legal_name query string false "Search by legal name (partial match)"
+// @Param inn_name query string false "Search by INN name (partial match)"
+// @Param activity_status query bool false "Filter by activity status"
+// @Param director_name query string false "Search by director name (partial match)"
+// @Param limit query int false "Limit (default 20, max 100)"
+// @Param offset query int false "Offset (default 0)"
+// @Success 200 {object} dto.EntrepreneurListResponse "Entrepreneurs list"
+// @Failure 400 {object} dto.ErrorResponse "Invalid query parameters"
+// @Failure 401 {object} dto.ErrorResponse "Unauthorized"
+// @Failure 500 {object} dto.ErrorResponse "Internal server error"
+// @Router /entrepreneurs [get]
+func (h *EntrepreneurHandler) GetAll(c *gin.Context) {
+	filter, err := parseEntrepreneurFilter(c)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, dto.ErrorResponse{Error: err.Error()})
+		return
+	}
+
+	entrepreneurs, total, err := h.entrepreneurService.GetAll(c.Request.Context(), filter)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, dto.ErrorResponse{Error: "internal server error"})
+		return
+	}
+
+	c.JSON(http.StatusOK, dto.NewEntrepreneurListResponse(entrepreneurs, total, filter.Limit, filter.Offset))
+}
+
+// UpdateEntrepreneur godoc
+// @Summary Update entrepreneur
+// @Description Updates an entrepreneur's fields
+// @Tags entrepreneurs
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path string true "Entrepreneur ID (UUID)"
+// @Param request body dto.UpdateEntrepreneurRequest true "Fields to update"
+// @Success 200 {object} dto.EntrepreneurResponse "Entrepreneur updated"
+// @Failure 400 {object} dto.ErrorResponse "Invalid request"
+// @Failure 401 {object} dto.ErrorResponse "Unauthorized"
+// @Failure 404 {object} dto.ErrorResponse "Entrepreneur not found"
+// @Failure 500 {object} dto.ErrorResponse "Internal server error"
+// @Router /entrepreneurs/{id} [put]
+func (h *EntrepreneurHandler) Update(c *gin.Context) {
+	id, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, dto.ErrorResponse{Error: "invalid entrepreneur id"})
+		return
+	}
+
+	var req dto.UpdateEntrepreneurRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, dto.ErrorResponse{Error: err.Error()})
+		return
+	}
+
+	e, err := h.entrepreneurService.Update(c.Request.Context(), id, appent.UpdateInput{
+		LegalName:             req.LegalName,
+		RegistrationAuthority: req.RegistrationAuthority,
+		RegistrationDate:      req.RegistrationDate,
+		RegistrationNumber:    req.RegistrationNumber,
+		LegalForm:             req.LegalForm,
+		IfutCode:              req.IfutCode,
+		DbibtCode:             req.DbibtCode,
+		ActivityStatus:        req.ActivityStatus,
+		CharterFund:           req.CharterFund,
+		Founders:              req.Founders,
+		Email:                 req.Email,
+		Phone:                 req.Phone,
+		MhobtCode:             req.MhobtCode,
+		Address:               req.Address,
+		DirectorName:          req.DirectorName,
+	})
+	if err != nil {
+		handleEntrepreneurError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, dto.NewEntrepreneurResponse(e))
+}
+
+// DeleteEntrepreneur godoc
+// @Summary Delete entrepreneur
+// @Description Deletes an entrepreneur by its UUID
+// @Tags entrepreneurs
+// @Produce json
+// @Security BearerAuth
+// @Param id path string true "Entrepreneur ID (UUID)"
+// @Success 200 {object} map[string]string "Entrepreneur deleted"
+// @Failure 400 {object} dto.ErrorResponse "Invalid UUID"
+// @Failure 401 {object} dto.ErrorResponse "Unauthorized"
+// @Failure 404 {object} dto.ErrorResponse "Entrepreneur not found"
+// @Failure 500 {object} dto.ErrorResponse "Internal server error"
+// @Router /entrepreneurs/{id} [delete]
+func (h *EntrepreneurHandler) Delete(c *gin.Context) {
+	id, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, dto.ErrorResponse{Error: "invalid entrepreneur id"})
+		return
+	}
+
+	if err := h.entrepreneurService.Delete(c.Request.Context(), id); err != nil {
+		handleEntrepreneurError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "entrepreneur deleted successfully"})
+}
+
+func parseEntrepreneurFilter(c *gin.Context) (domain.EntrepreneurFilter, error) {
+	var filter domain.EntrepreneurFilter
+
+	if v := c.Query("legal_name"); v != "" {
+		filter.LegalName = &v
+	}
+	if v := c.Query("inn_name"); v != "" {
+		filter.InnName = &v
+	}
+	if v := c.Query("activity_status"); v != "" {
+		b, err := strconv.ParseBool(v)
+		if err != nil {
+			return filter, errors.New("invalid activity_status parameter")
+		}
+		filter.ActivityStatus = &b
+	}
+	if v := c.Query("director_name"); v != "" {
+		filter.DirectorName = &v
+	}
+
+	filter.Limit = 20
+	if v := c.Query("limit"); v != "" {
+		l, err := strconv.Atoi(v)
+		if err != nil {
+			return filter, errors.New("invalid limit parameter")
+		}
+		filter.Limit = l
+	}
+
+	if v := c.Query("offset"); v != "" {
+		o, err := strconv.Atoi(v)
+		if err != nil {
+			return filter, errors.New("invalid offset parameter")
+		}
+		filter.Offset = o
+	}
+
+	return filter, nil
+}
+
+func handleEntrepreneurError(c *gin.Context, err error) {
+	switch {
+	case errors.Is(err, domain.ErrEntrepreneurNotFound):
+		c.JSON(http.StatusNotFound, dto.ErrorResponse{Error: err.Error()})
+	default:
+		c.JSON(http.StatusInternalServerError, dto.ErrorResponse{Error: "internal server error"})
+	}
+}
