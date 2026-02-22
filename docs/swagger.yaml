@@ -492,6 +492,14 @@ paths:
         in: query
         name: director_name
         type: string
+      - description: Filter from date (YYYY-MM-DD, e.g. 2024-01-01)
+        in: query
+        name: date_from
+        type: string
+      - description: Filter to date inclusive (YYYY-MM-DD, e.g. 2024-12-31)
+        in: query
+        name: date_to
+        type: string
       - description: Limit (default 20, max 100)
         in: query
         name: limit

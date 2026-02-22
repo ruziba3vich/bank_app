@@ -359,6 +359,18 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
+                        "type": "string",
+                        "description": "Filter from date (YYYY-MM-DD, e.g. 2024-01-01)",
+                        "name": "date_from",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter to date inclusive (YYYY-MM-DD, e.g. 2024-12-31)",
+                        "name": "date_to",
+                        "in": "query"
+                    },
+                    {
                         "type": "integer",
                         "description": "Limit (default 20, max 100)",
                         "name": "limit",
