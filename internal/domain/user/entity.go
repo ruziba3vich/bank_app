@@ -24,3 +24,14 @@ type Session struct {
 	LastLoginAt      time.Time
 	CreatedAt        time.Time
 }
+
+type UserFilter struct {
+	FullName    *string
+	Role        *string
+	Login       *string
+	Status      *bool
+	CreatedFrom *time.Time
+	CreatedTo   *time.Time
+	Limit       int
+	Offset      int
+}

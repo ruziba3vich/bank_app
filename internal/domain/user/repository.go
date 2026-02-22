@@ -10,6 +10,9 @@ type UserRepository interface {
 	Create(ctx context.Context, u *User) (*User, error)
 	GetByLogin(ctx context.Context, login string) (*User, error)
 	GetByID(ctx context.Context, id uuid.UUID) (*User, error)
+	GetAll(ctx context.Context, filter UserFilter) ([]*User, int, error)
+	Update(ctx context.Context, u *User) (*User, error)
+	Delete(ctx context.Context, id uuid.UUID) error
 }
 
 type SessionRepository interface {
