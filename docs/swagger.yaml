@@ -69,7 +69,7 @@ definitions:
       status:
         type: boolean
     type: object
-host: localhost:8080
+host: bank-app-back.compile-me.uz
 info:
   contact: {}
   description: Authentication service for the Bank App

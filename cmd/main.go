@@ -20,7 +20,7 @@ import (
 // @title Bank App API
 // @version 1.0
 // @description Authentication service for the Bank App
-// @host localhost:8080
+// @host bank-app-back.compile-me.uz
 // @BasePath /api/v1
 // @securityDefinitions.apikey BearerAuth
 // @in header
