@@ -54,6 +54,28 @@ definitions:
     - login
     - password
     type: object
+  dto.UpdateUserRequest:
+    properties:
+      full_name:
+        type: string
+      role:
+        type: string
+      status:
+        type: boolean
+    type: object
+  dto.UserListResponse:
+    properties:
+      limit:
+        type: integer
+      offset:
+        type: integer
+      total:
+        type: integer
+      users:
+        items:
+          $ref: '#/definitions/dto.UserResponse'
+        type: array
+    type: object
   dto.UserResponse:
     properties:
       created_at:
@@ -76,6 +98,185 @@ info:
   title: Bank App API
   version: "1.0"
 paths:
+  /users:
+    get:
+      description: Returns a paginated list of users with optional filters
+      parameters:
+      - description: Filter by full name (partial match)
+        in: query
+        name: full_name
+        type: string
+      - description: Filter by role
+        in: query
+        name: role
+        type: string
+      - description: Filter by login (partial match)
+        in: query
+        name: login
+        type: string
+      - description: Filter by status
+        in: query
+        name: status
+        type: boolean
+      - description: Filter by created_at >= (RFC3339)
+        in: query
+        name: created_from
+        type: string
+      - description: Filter by created_at <= (RFC3339)
+        in: query
+        name: created_to
+        type: string
+      - description: Limit (default 20, max 100)
+        in: query
+        name: limit
+        type: integer
+      - description: Offset (default 0)
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Users list
+          schema:
+            $ref: '#/definitions/dto.UserListResponse'
+        "400":
+          description: Invalid query parameters
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get all users
+      tags:
+      - users
+  /users/{id}:
+    delete:
+      description: Deletes a user and all their sessions
+      parameters:
+      - description: User ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User deleted
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid UUID
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: User not found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete user
+      tags:
+      - users
+    get:
+      description: Returns a user by their UUID
+      parameters:
+      - description: User ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User found
+          schema:
+            $ref: '#/definitions/dto.UserResponse'
+        "400":
+          description: Invalid UUID
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: User not found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get user by ID
+      tags:
+      - users
+    put:
+      consumes:
+      - application/json
+      description: Updates a user's full_name, role, or status
+      parameters:
+      - description: User ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Fields to update
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User updated
+          schema:
+            $ref: '#/definitions/dto.UserResponse'
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: User not found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update user
+      tags:
+      - users
   /users/login:
     post:
       consumes:
@@ -137,6 +338,33 @@ paths:
       security:
       - BearerAuth: []
       summary: Logout user
+      tags:
+      - users
+  /users/me:
+    get:
+      description: Returns the authenticated user's profile
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User profile
+          schema:
+            $ref: '#/definitions/dto.UserResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: User not found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get current user
       tags:
       - users
   /users/refresh:
