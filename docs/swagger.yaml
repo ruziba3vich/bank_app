@@ -9,6 +9,35 @@ definitions:
       user:
         $ref: '#/definitions/dto.UserResponse'
     type: object
+  dto.CityListResponse:
+    properties:
+      cities:
+        items:
+          $ref: '#/definitions/dto.CityResponse'
+        type: array
+      limit:
+        type: integer
+      offset:
+        type: integer
+      total:
+        type: integer
+    type: object
+  dto.CityResponse:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+  dto.CreateCityRequest:
+    properties:
+      name:
+        type: string
+    required:
+    - name
+    type: object
   dto.ErrorResponse:
     properties:
       error:
@@ -54,6 +83,11 @@ definitions:
     - login
     - password
     type: object
+  dto.UpdateCityRequest:
+    properties:
+      name:
+        type: string
+    type: object
   dto.UpdateUserRequest:
     properties:
       full_name:
@@ -98,6 +132,200 @@ info:
   title: Bank App API
   version: "1.0"
 paths:
+  /cities:
+    get:
+      description: Returns a paginated list of cities with optional name search
+      parameters:
+      - description: Search by name (partial match)
+        in: query
+        name: name
+        type: string
+      - description: Limit (default 20, max 100)
+        in: query
+        name: limit
+        type: integer
+      - description: Offset (default 0)
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Cities list
+          schema:
+            $ref: '#/definitions/dto.CityListResponse'
+        "400":
+          description: Invalid query parameters
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get all cities
+      tags:
+      - cities
+    post:
+      consumes:
+      - application/json
+      description: Creates a new city with the given name
+      parameters:
+      - description: City details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateCityRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: City created
+          schema:
+            $ref: '#/definitions/dto.CityResponse'
+        "400":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create a new city
+      tags:
+      - cities
+  /cities/{id}:
+    delete:
+      description: Deletes a city by its UUID
+      parameters:
+      - description: City ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: City deleted
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid UUID
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: City not found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete city
+      tags:
+      - cities
+    get:
+      description: Returns a city by its UUID
+      parameters:
+      - description: City ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: City found
+          schema:
+            $ref: '#/definitions/dto.CityResponse'
+        "400":
+          description: Invalid UUID
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: City not found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get city by ID
+      tags:
+      - cities
+    put:
+      consumes:
+      - application/json
+      description: Updates a city's name
+      parameters:
+      - description: City ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Fields to update
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateCityRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: City updated
+          schema:
+            $ref: '#/definitions/dto.CityResponse'
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: City not found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update city
+      tags:
+      - cities
   /users:
     get:
       description: Returns a paginated list of users with optional filters
