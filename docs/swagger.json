@@ -312,6 +312,390 @@
                 }
             }
         },
+        "/entrepreneurs": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns a paginated list of entrepreneurs with optional filters",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "entrepreneurs"
+                ],
+                "summary": "Get all entrepreneurs",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Search by legal name (partial match)",
+                        "name": "legal_name",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search by INN name (partial match)",
+                        "name": "inn_name",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Filter by activity status",
+                        "name": "activity_status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search by director name (partial match)",
+                        "name": "director_name",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Limit (default 20, max 100)",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Offset (default 0)",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Entrepreneurs list",
+                        "schema": {
+                            "$ref": "#/definitions/dto.EntrepreneurListResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid query parameters",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Creates a new entrepreneur. If the INN name exists, it binds the existing INN; otherwise creates a new one.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "entrepreneurs"
+                ],
+                "summary": "Create a new entrepreneur",
+                "parameters": [
+                    {
+                        "description": "Entrepreneur details",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.CreateEntrepreneurRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Entrepreneur created",
+                        "schema": {
+                            "$ref": "#/definitions/dto.EntrepreneurResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Validation error",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/entrepreneurs/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns an entrepreneur by its UUID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "entrepreneurs"
+                ],
+                "summary": "Get entrepreneur by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Entrepreneur ID (UUID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Entrepreneur found",
+                        "schema": {
+                            "$ref": "#/definitions/dto.EntrepreneurResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid UUID",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Entrepreneur not found",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Updates an entrepreneur's fields",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "entrepreneurs"
+                ],
+                "summary": "Update entrepreneur",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Entrepreneur ID (UUID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Fields to update",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.UpdateEntrepreneurRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Entrepreneur updated",
+                        "schema": {
+                            "$ref": "#/definitions/dto.EntrepreneurResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Entrepreneur not found",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Deletes an entrepreneur by its UUID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "entrepreneurs"
+                ],
+                "summary": "Delete entrepreneur",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Entrepreneur ID (UUID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Entrepreneur deleted",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid UUID",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Entrepreneur not found",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/inns": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns a paginated list of INNs with optional name search",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "inns"
+                ],
+                "summary": "Get all INNs",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Search by name (partial match)",
+                        "name": "name",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Limit (default 20, max 100)",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Offset (default 0)",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "INNs list",
+                        "schema": {
+                            "$ref": "#/definitions/dto.InnListResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid query parameters",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/users": {
             "get": {
                 "security": [
@@ -902,10 +1286,182 @@
                 }
             }
         },
+        "dto.CreateEntrepreneurRequest": {
+            "type": "object",
+            "required": [
+                "inn"
+            ],
+            "properties": {
+                "activity_status": {
+                    "type": "boolean"
+                },
+                "address": {
+                    "type": "string"
+                },
+                "charter_fund": {
+                    "type": "integer"
+                },
+                "dbibt_code": {
+                    "type": "integer"
+                },
+                "director_name": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "founders": {
+                    "type": "string"
+                },
+                "ifut_code": {
+                    "type": "integer"
+                },
+                "inn": {
+                    "type": "string"
+                },
+                "legal_form": {
+                    "type": "string"
+                },
+                "legal_name": {
+                    "type": "string"
+                },
+                "mhobt_code": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "registration_authority": {
+                    "type": "string"
+                },
+                "registration_date": {
+                    "type": "string"
+                },
+                "registration_number": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.EntrepreneurListResponse": {
+            "type": "object",
+            "properties": {
+                "entrepreneurs": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.EntrepreneurResponse"
+                    }
+                },
+                "limit": {
+                    "type": "integer"
+                },
+                "offset": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.EntrepreneurResponse": {
+            "type": "object",
+            "properties": {
+                "activity_status": {
+                    "type": "boolean"
+                },
+                "address": {
+                    "type": "string"
+                },
+                "charter_fund": {
+                    "type": "integer"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "dbibt_code": {
+                    "type": "integer"
+                },
+                "director_name": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "founders": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "ifut_code": {
+                    "type": "integer"
+                },
+                "inn_id": {
+                    "type": "string"
+                },
+                "inn_name": {
+                    "type": "string"
+                },
+                "legal_form": {
+                    "type": "string"
+                },
+                "legal_name": {
+                    "type": "string"
+                },
+                "mhobt_code": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "registration_authority": {
+                    "type": "string"
+                },
+                "registration_date": {
+                    "type": "string"
+                },
+                "registration_number": {
+                    "type": "string"
+                }
+            }
+        },
         "dto.ErrorResponse": {
             "type": "object",
             "properties": {
                 "error": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.InnListResponse": {
+            "type": "object",
+            "properties": {
+                "inns": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.InnResponse"
+                    }
+                },
+                "limit": {
+                    "type": "integer"
+                },
+                "offset": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.InnResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
                     "type": "string"
                 }
             }
@@ -972,6 +1528,56 @@
             "type": "object",
             "properties": {
                 "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.UpdateEntrepreneurRequest": {
+            "type": "object",
+            "properties": {
+                "activity_status": {
+                    "type": "boolean"
+                },
+                "address": {
+                    "type": "string"
+                },
+                "charter_fund": {
+                    "type": "integer"
+                },
+                "dbibt_code": {
+                    "type": "integer"
+                },
+                "director_name": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "founders": {
+                    "type": "string"
+                },
+                "ifut_code": {
+                    "type": "integer"
+                },
+                "legal_form": {
+                    "type": "string"
+                },
+                "legal_name": {
+                    "type": "string"
+                },
+                "mhobt_code": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "registration_authority": {
+                    "type": "string"
+                },
+                "registration_date": {
+                    "type": "string"
+                },
+                "registration_number": {
                     "type": "string"
                 }
             }
