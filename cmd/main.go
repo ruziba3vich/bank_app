@@ -10,6 +10,8 @@ import (
 	"github.com/prodonik/bank_app/config"
 	_ "github.com/prodonik/bank_app/docs"
 	appcity "github.com/prodonik/bank_app/internal/application/city"
+	appent "github.com/prodonik/bank_app/internal/application/entrepreneur"
+	appinn "github.com/prodonik/bank_app/internal/application/inn"
 	appuser "github.com/prodonik/bank_app/internal/application/user"
 	"github.com/prodonik/bank_app/internal/infrastructure/auth"
 	"github.com/prodonik/bank_app/internal/infrastructure/database"
@@ -54,15 +56,21 @@ func main() {
 	userRepo := repository.NewUserRepository(db)
 	sessionRepo := repository.NewSessionRepository(db)
 	cityRepo := repository.NewCityRepository(db)
+	innRepo := repository.NewInnRepository(db)
+	entrepreneurRepo := repository.NewEntrepreneurRepository(db)
 
 	// Application
 	userService := appuser.NewService(userRepo, sessionRepo, jwtService)
 	cityService := appcity.NewService(cityRepo)
+	innService := appinn.NewService(innRepo)
+	entrepreneurService := appent.NewService(entrepreneurRepo, innRepo)
 
 	// Interfaces
 	userHandler := handler.NewUserHandler(userService)
 	cityHandler := handler.NewCityHandler(cityService)
-	router := api.NewRouter(userHandler, cityHandler, jwtService)
+	innHandler := handler.NewInnHandler(innService)
+	entrepreneurHandler := handler.NewEntrepreneurHandler(entrepreneurService)
+	router := api.NewRouter(userHandler, cityHandler, innHandler, entrepreneurHandler, jwtService)
 
 	log.Printf("Starting server on port %s", cfg.ServerPort)
 	if err := router.Run(":" + cfg.ServerPort); err != nil {

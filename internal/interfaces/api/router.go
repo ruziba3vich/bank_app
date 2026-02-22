@@ -13,7 +13,7 @@ import (
 	"github.com/prodonik/bank_app/internal/interfaces/api/middleware"
 )
 
-func NewRouter(userHandler *handler.UserHandler, cityHandler *handler.CityHandler, jwtService *auth.JWTService) *gin.Engine {
+func NewRouter(userHandler *handler.UserHandler, cityHandler *handler.CityHandler, innHandler *handler.InnHandler, entrepreneurHandler *handler.EntrepreneurHandler, jwtService *auth.JWTService) *gin.Engine {
 	r := gin.Default()
 
 	r.Use(cors.New(cors.Config{
@@ -58,6 +58,22 @@ func NewRouter(userHandler *handler.UserHandler, cityHandler *handler.CityHandle
 			cities.GET("/:id", cityHandler.GetByID)
 			cities.PUT("/:id", cityHandler.Update)
 			cities.DELETE("/:id", cityHandler.Delete)
+		}
+
+		inns := v1.Group("/inns")
+		inns.Use(middleware.AuthMiddleware(jwtService))
+		{
+			inns.GET("", innHandler.GetAll)
+		}
+
+		entrepreneurs := v1.Group("/entrepreneurs")
+		entrepreneurs.Use(middleware.AuthMiddleware(jwtService))
+		{
+			entrepreneurs.POST("", entrepreneurHandler.Create)
+			entrepreneurs.GET("", entrepreneurHandler.GetAll)
+			entrepreneurs.GET("/:id", entrepreneurHandler.GetByID)
+			entrepreneurs.PUT("/:id", entrepreneurHandler.Update)
+			entrepreneurs.DELETE("/:id", entrepreneurHandler.Delete)
 		}
 	}
 
