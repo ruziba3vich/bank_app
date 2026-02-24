@@ -1314,6 +1314,9 @@ const docTemplate = `{
                 "access_token": {
                     "type": "string"
                 },
+                "device_id": {
+                    "type": "string"
+                },
                 "refresh_token": {
                     "type": "string"
                 },
@@ -1587,14 +1590,10 @@ const docTemplate = `{
         "dto.LoginRequest": {
             "type": "object",
             "required": [
-                "device_id",
                 "login",
                 "password"
             ],
             "properties": {
-                "device_id": {
-                    "type": "string"
-                },
                 "login": {
                     "type": "string"
                 },

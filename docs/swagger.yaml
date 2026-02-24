@@ -4,6 +4,8 @@ definitions:
     properties:
       access_token:
         type: string
+      device_id:
+        type: string
       refresh_token:
         type: string
       user:
@@ -182,14 +184,11 @@ definitions:
     type: object
   dto.LoginRequest:
     properties:
-      device_id:
-        type: string
       login:
         type: string
       password:
         type: string
     required:
-    - device_id
     - login
     - password
     type: object
