@@ -651,6 +651,69 @@ const docTemplate = `{
                 }
             }
         },
+        "/ifut-codes": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns a paginated list of IFUT codes with optional name search",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ifut-codes"
+                ],
+                "summary": "Get all IFUT codes",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Search by name (partial match)",
+                        "name": "name",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Limit (default 20, max 100)",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Offset (default 0)",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "IFUT codes list",
+                        "schema": {
+                            "$ref": "#/definitions/dto.IfutCodeListResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid query parameters",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/inns": {
             "get": {
                 "security": [
@@ -1332,7 +1395,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "ifut_code": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "inn": {
                     "type": "string"
@@ -1410,8 +1473,11 @@ const docTemplate = `{
                 "id": {
                     "type": "string"
                 },
-                "ifut_code": {
-                    "type": "integer"
+                "ifut_code_id": {
+                    "type": "string"
+                },
+                "ifut_code_name": {
+                    "type": "string"
                 },
                 "inn_id": {
                     "type": "string"
@@ -1446,6 +1512,40 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "error": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.IfutCodeListResponse": {
+            "type": "object",
+            "properties": {
+                "ifut_codes": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.IfutCodeResponse"
+                    }
+                },
+                "limit": {
+                    "type": "integer"
+                },
+                "offset": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.IfutCodeResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
                     "type": "string"
                 }
             }
@@ -1575,7 +1675,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "ifut_code": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "legal_form": {
                     "type": "string"

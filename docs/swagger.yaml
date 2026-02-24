@@ -55,7 +55,7 @@ definitions:
       founders:
         type: string
       ifut_code:
-        type: integer
+        type: string
       inn:
         type: string
       legal_form:
@@ -108,8 +108,10 @@ definitions:
         type: string
       id:
         type: string
-      ifut_code:
-        type: integer
+      ifut_code_id:
+        type: string
+      ifut_code_name:
+        type: string
       inn_id:
         type: string
       inn_name:
@@ -132,6 +134,28 @@ definitions:
   dto.ErrorResponse:
     properties:
       error:
+        type: string
+    type: object
+  dto.IfutCodeListResponse:
+    properties:
+      ifut_codes:
+        items:
+          $ref: '#/definitions/dto.IfutCodeResponse'
+        type: array
+      limit:
+        type: integer
+      offset:
+        type: integer
+      total:
+        type: integer
+    type: object
+  dto.IfutCodeResponse:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: string
+      name:
         type: string
     type: object
   dto.InnListResponse:
@@ -218,7 +242,7 @@ definitions:
       founders:
         type: string
       ifut_code:
-        type: integer
+        type: string
       legal_form:
         type: string
       legal_name:
@@ -687,6 +711,46 @@ paths:
       summary: Update entrepreneur
       tags:
       - entrepreneurs
+  /ifut-codes:
+    get:
+      description: Returns a paginated list of IFUT codes with optional name search
+      parameters:
+      - description: Search by name (partial match)
+        in: query
+        name: name
+        type: string
+      - description: Limit (default 20, max 100)
+        in: query
+        name: limit
+        type: integer
+      - description: Offset (default 0)
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: IFUT codes list
+          schema:
+            $ref: '#/definitions/dto.IfutCodeListResponse'
+        "400":
+          description: Invalid query parameters
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get all IFUT codes
+      tags:
+      - ifut-codes
   /inns:
     get:
       description: Returns a paginated list of INNs with optional name search
