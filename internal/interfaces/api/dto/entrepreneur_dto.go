@@ -15,7 +15,7 @@ type CreateEntrepreneurRequest struct {
 	RegistrationDate      string `json:"registration_date"`
 	RegistrationNumber    string `json:"registration_number"`
 	LegalForm             string `json:"legal_form"`
-	IfutCode              int32  `json:"ifut_code"`
+	IfutCode              string `json:"ifut_code"`
 	DbibtCode             int32  `json:"dbibt_code"`
 	ActivityStatus        *bool  `json:"activity_status"`
 	CharterFund           int32  `json:"charter_fund"`
@@ -33,7 +33,7 @@ type UpdateEntrepreneurRequest struct {
 	RegistrationDate      *string `json:"registration_date"`
 	RegistrationNumber    *string `json:"registration_number"`
 	LegalForm             *string `json:"legal_form"`
-	IfutCode              *int32  `json:"ifut_code"`
+	IfutCode              *string `json:"ifut_code"`
 	DbibtCode             *int32  `json:"dbibt_code"`
 	ActivityStatus        *bool   `json:"activity_status"`
 	CharterFund           *int32  `json:"charter_fund"`
@@ -46,25 +46,26 @@ type UpdateEntrepreneurRequest struct {
 }
 
 type EntrepreneurResponse struct {
-	ID                    uuid.UUID `json:"id"`
-	InnID                 uuid.UUID `json:"inn_id"`
-	InnName               string    `json:"inn_name"`
-	LegalName             string    `json:"legal_name"`
-	RegistrationAuthority string    `json:"registration_authority"`
-	RegistrationDate      string    `json:"registration_date"`
-	RegistrationNumber    string    `json:"registration_number"`
-	LegalForm             string    `json:"legal_form"`
-	IfutCode              int32     `json:"ifut_code"`
-	DbibtCode             int32     `json:"dbibt_code"`
-	ActivityStatus        bool      `json:"activity_status"`
-	CharterFund           int32     `json:"charter_fund"`
-	Founders              string    `json:"founders"`
-	Email                 string    `json:"email"`
-	Phone                 string    `json:"phone"`
-	MhobtCode             string    `json:"mhobt_code"`
-	Address               string    `json:"address"`
-	DirectorName          string    `json:"director_name"`
-	CreatedAt             time.Time `json:"created_at"`
+	ID                    uuid.UUID  `json:"id"`
+	InnID                 uuid.UUID  `json:"inn_id"`
+	InnName               string     `json:"inn_name"`
+	LegalName             string     `json:"legal_name"`
+	RegistrationAuthority string     `json:"registration_authority"`
+	RegistrationDate      string     `json:"registration_date"`
+	RegistrationNumber    string     `json:"registration_number"`
+	LegalForm             string     `json:"legal_form"`
+	IfutCodeID            *uuid.UUID `json:"ifut_code_id"`
+	IfutCodeName          string     `json:"ifut_code_name"`
+	DbibtCode             int32      `json:"dbibt_code"`
+	ActivityStatus        bool       `json:"activity_status"`
+	CharterFund           int32      `json:"charter_fund"`
+	Founders              string     `json:"founders"`
+	Email                 string     `json:"email"`
+	Phone                 string     `json:"phone"`
+	MhobtCode             string     `json:"mhobt_code"`
+	Address               string     `json:"address"`
+	DirectorName          string     `json:"director_name"`
+	CreatedAt             time.Time  `json:"created_at"`
 }
 
 type EntrepreneurListResponse struct {
@@ -84,7 +85,8 @@ func NewEntrepreneurResponse(e *domain.Entrepreneur) EntrepreneurResponse {
 		RegistrationDate:      e.RegistrationDate,
 		RegistrationNumber:    e.RegistrationNumber,
 		LegalForm:             e.LegalForm,
-		IfutCode:              e.IfutCode,
+		IfutCodeID:            e.IfutCodeID,
+		IfutCodeName:          e.IfutCodeName,
 		DbibtCode:             e.DbibtCode,
 		ActivityStatus:        e.ActivityStatus,
 		CharterFund:           e.CharterFund,
