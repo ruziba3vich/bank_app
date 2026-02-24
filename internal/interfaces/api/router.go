@@ -13,7 +13,7 @@ import (
 	"github.com/prodonik/bank_app/internal/interfaces/api/middleware"
 )
 
-func NewRouter(userHandler *handler.UserHandler, cityHandler *handler.CityHandler, innHandler *handler.InnHandler, entrepreneurHandler *handler.EntrepreneurHandler, jwtService *auth.JWTService) *gin.Engine {
+func NewRouter(userHandler *handler.UserHandler, cityHandler *handler.CityHandler, innHandler *handler.InnHandler, ifutCodeHandler *handler.IfutCodeHandler, entrepreneurHandler *handler.EntrepreneurHandler, jwtService *auth.JWTService) *gin.Engine {
 	r := gin.Default()
 
 	r.Use(cors.New(cors.Config{
@@ -64,6 +64,12 @@ func NewRouter(userHandler *handler.UserHandler, cityHandler *handler.CityHandle
 		inns.Use(middleware.AuthMiddleware(jwtService))
 		{
 			inns.GET("", innHandler.GetAll)
+		}
+
+		ifutCodes := v1.Group("/ifut-codes")
+		ifutCodes.Use(middleware.AuthMiddleware(jwtService))
+		{
+			ifutCodes.GET("", ifutCodeHandler.GetAll)
 		}
 
 		entrepreneurs := v1.Group("/entrepreneurs")
