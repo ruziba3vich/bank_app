@@ -18,7 +18,6 @@ type RegisterRequest struct {
 type LoginRequest struct {
 	Login    string `json:"login" binding:"required"`
 	Password string `json:"password" binding:"required"`
-	DeviceID string `json:"device_id" binding:"required"`
 }
 
 type RefreshRequest struct {
@@ -35,6 +34,7 @@ type UpdateUserRequest struct {
 type AuthResponse struct {
 	AccessToken  string       `json:"access_token"`
 	RefreshToken string       `json:"refresh_token"`
+	DeviceID     string       `json:"device_id"`
 	User         UserResponse `json:"user"`
 }
 
@@ -82,10 +82,11 @@ func NewUserListResponse(users []*domain.User, total, limit, offset int) UserLis
 	return resp
 }
 
-func NewAuthResponse(accessToken, refreshToken string, u *domain.User) AuthResponse {
+func NewAuthResponse(accessToken, refreshToken, deviceID string, u *domain.User) AuthResponse {
 	return AuthResponse{
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
+		DeviceID:     deviceID,
 		User:         NewUserResponse(u),
 	}
 }

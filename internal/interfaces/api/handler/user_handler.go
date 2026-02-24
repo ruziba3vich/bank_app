@@ -75,17 +75,19 @@ func (h *UserHandler) Login(c *gin.Context) {
 		return
 	}
 
+	deviceID := uuid.New().String()
+
 	output, err := h.userService.Login(c.Request.Context(), appuser.LoginInput{
 		Login:    req.Login,
 		Password: req.Password,
-		DeviceID: req.DeviceID,
+		DeviceID: deviceID,
 	})
 	if err != nil {
 		handleServiceError(c, err)
 		return
 	}
 
-	c.JSON(http.StatusOK, dto.NewAuthResponse(output.AccessToken, output.RefreshToken, output.User))
+	c.JSON(http.StatusOK, dto.NewAuthResponse(output.AccessToken, output.RefreshToken, deviceID, output.User))
 }
 
 // Refresh godoc
@@ -117,7 +119,7 @@ func (h *UserHandler) Refresh(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, dto.NewAuthResponse(output.AccessToken, output.RefreshToken, output.User))
+	c.JSON(http.StatusOK, dto.NewAuthResponse(output.AccessToken, output.RefreshToken, req.DeviceID, output.User))
 }
 
 // Logout godoc
