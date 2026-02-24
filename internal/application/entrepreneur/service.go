@@ -7,16 +7,18 @@ import (
 	"github.com/google/uuid"
 
 	domain "github.com/prodonik/bank_app/internal/domain/entrepreneur"
+	ifutdomain "github.com/prodonik/bank_app/internal/domain/ifut_code"
 	domainn "github.com/prodonik/bank_app/internal/domain/inn"
 )
 
 type Service struct {
-	repo    domain.Repository
-	innRepo domainn.Repository
+	repo         domain.Repository
+	innRepo      domainn.Repository
+	ifutCodeRepo ifutdomain.Repository
 }
 
-func NewService(repo domain.Repository, innRepo domainn.Repository) *Service {
-	return &Service{repo: repo, innRepo: innRepo}
+func NewService(repo domain.Repository, innRepo domainn.Repository, ifutCodeRepo ifutdomain.Repository) *Service {
+	return &Service{repo: repo, innRepo: innRepo, ifutCodeRepo: ifutCodeRepo}
 }
 
 type CreateInput struct {
@@ -26,7 +28,7 @@ type CreateInput struct {
 	RegistrationDate      string
 	RegistrationNumber    string
 	LegalForm             string
-	IfutCode              int32
+	IfutCode              string
 	DbibtCode             int32
 	ActivityStatus        bool
 	CharterFund           int32
@@ -44,7 +46,7 @@ type UpdateInput struct {
 	RegistrationDate      *string
 	RegistrationNumber    *string
 	LegalForm             *string
-	IfutCode              *int32
+	IfutCode              *string
 	DbibtCode             *int32
 	ActivityStatus        *bool
 	CharterFund           *int32
@@ -57,7 +59,7 @@ type UpdateInput struct {
 }
 
 func (s *Service) Create(ctx context.Context, input CreateInput) (*domain.Entrepreneur, error) {
-	// Try to find existing INN by name, create if not found
+	// Resolve INN
 	innRecord, err := s.innRepo.GetByName(ctx, input.InnName)
 	if err != nil {
 		if !errors.Is(err, domainn.ErrInnNotFound) {
@@ -69,6 +71,24 @@ func (s *Service) Create(ctx context.Context, input CreateInput) (*domain.Entrep
 		}
 	}
 
+	// Resolve IFUT code
+	var ifutCodeID *uuid.UUID
+	var ifutCodeName string
+	if input.IfutCode != "" {
+		ifutRecord, err := s.ifutCodeRepo.GetByName(ctx, input.IfutCode)
+		if err != nil {
+			if !errors.Is(err, ifutdomain.ErrIfutCodeNotFound) {
+				return nil, err
+			}
+			ifutRecord, err = s.ifutCodeRepo.Create(ctx, &ifutdomain.IfutCode{Name: input.IfutCode})
+			if err != nil {
+				return nil, err
+			}
+		}
+		ifutCodeID = &ifutRecord.ID
+		ifutCodeName = ifutRecord.Name
+	}
+
 	e := &domain.Entrepreneur{
 		InnID:                 innRecord.ID,
 		InnName:               innRecord.Name,
@@ -77,7 +97,8 @@ func (s *Service) Create(ctx context.Context, input CreateInput) (*domain.Entrep
 		RegistrationDate:      input.RegistrationDate,
 		RegistrationNumber:    input.RegistrationNumber,
 		LegalForm:             input.LegalForm,
-		IfutCode:              input.IfutCode,
+		IfutCodeID:            ifutCodeID,
+		IfutCodeName:          ifutCodeName,
 		DbibtCode:             input.DbibtCode,
 		ActivityStatus:        input.ActivityStatus,
 		CharterFund:           input.CharterFund,
@@ -128,7 +149,23 @@ func (s *Service) Update(ctx context.Context, id uuid.UUID, input UpdateInput) (
 		existing.LegalForm = *input.LegalForm
 	}
 	if input.IfutCode != nil {
-		existing.IfutCode = *input.IfutCode
+		if *input.IfutCode == "" {
+			existing.IfutCodeID = nil
+			existing.IfutCodeName = ""
+		} else {
+			ifutRecord, err := s.ifutCodeRepo.GetByName(ctx, *input.IfutCode)
+			if err != nil {
+				if !errors.Is(err, ifutdomain.ErrIfutCodeNotFound) {
+					return nil, err
+				}
+				ifutRecord, err = s.ifutCodeRepo.Create(ctx, &ifutdomain.IfutCode{Name: *input.IfutCode})
+				if err != nil {
+					return nil, err
+				}
+			}
+			existing.IfutCodeID = &ifutRecord.ID
+			existing.IfutCodeName = ifutRecord.Name
+		}
 	}
 	if input.DbibtCode != nil {
 		existing.DbibtCode = *input.DbibtCode
