@@ -24,7 +24,6 @@ type Entrepreneur struct {
 	RegistrationDate      string
 	RegistrationNumber    string
 	LegalForm             string
-	IfutCode              int32
 	DbibtCode             int32
 	ActivityStatus        bool
 	CharterFund           int32
@@ -35,6 +34,13 @@ type Entrepreneur struct {
 	Address               string
 	DirectorName          string
 	CreatedAt             time.Time
+	IfutCodeID            uuid.NullUUID
+}
+
+type IfutCode struct {
+	ID        uuid.UUID
+	Name      string
+	CreatedAt time.Time
 }
 
 type Inn struct {

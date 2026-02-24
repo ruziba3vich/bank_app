@@ -7,6 +7,7 @@ package sqlc
 
 import (
 	"context"
+	"database/sql"
 	"time"
 
 	"github.com/google/uuid"
@@ -15,14 +16,14 @@ import (
 const createEntrepreneur = `-- name: CreateEntrepreneur :one
 INSERT INTO entrepreneurs (
     inn_id, legal_name, registration_authority, registration_date,
-    registration_number, legal_form, ifut_code, dbibt_code,
+    registration_number, legal_form, ifut_code_id, dbibt_code,
     activity_status, charter_fund, founders, email,
     phone, mhobt_code, address, director_name
 ) VALUES (
     $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16
 )
 RETURNING id, inn_id, legal_name, registration_authority, registration_date,
-    registration_number, legal_form, ifut_code, dbibt_code,
+    registration_number, legal_form, ifut_code_id, dbibt_code,
     activity_status, charter_fund, founders, email,
     phone, mhobt_code, address, director_name, created_at
 `
@@ -34,7 +35,7 @@ type CreateEntrepreneurParams struct {
 	RegistrationDate      string
 	RegistrationNumber    string
 	LegalForm             string
-	IfutCode              int32
+	IfutCodeID            uuid.NullUUID
 	DbibtCode             int32
 	ActivityStatus        bool
 	CharterFund           int32
@@ -46,7 +47,28 @@ type CreateEntrepreneurParams struct {
 	DirectorName          string
 }
 
-func (q *Queries) CreateEntrepreneur(ctx context.Context, arg CreateEntrepreneurParams) (Entrepreneur, error) {
+type CreateEntrepreneurRow struct {
+	ID                    uuid.UUID
+	InnID                 uuid.UUID
+	LegalName             string
+	RegistrationAuthority string
+	RegistrationDate      string
+	RegistrationNumber    string
+	LegalForm             string
+	IfutCodeID            uuid.NullUUID
+	DbibtCode             int32
+	ActivityStatus        bool
+	CharterFund           int32
+	Founders              string
+	Email                 string
+	Phone                 string
+	MhobtCode             string
+	Address               string
+	DirectorName          string
+	CreatedAt             time.Time
+}
+
+func (q *Queries) CreateEntrepreneur(ctx context.Context, arg CreateEntrepreneurParams) (CreateEntrepreneurRow, error) {
 	row := q.db.QueryRowContext(ctx, createEntrepreneur,
 		arg.InnID,
 		arg.LegalName,
@@ -54,7 +76,7 @@ func (q *Queries) CreateEntrepreneur(ctx context.Context, arg CreateEntrepreneur
 		arg.RegistrationDate,
 		arg.RegistrationNumber,
 		arg.LegalForm,
-		arg.IfutCode,
+		arg.IfutCodeID,
 		arg.DbibtCode,
 		arg.ActivityStatus,
 		arg.CharterFund,
@@ -65,7 +87,7 @@ func (q *Queries) CreateEntrepreneur(ctx context.Context, arg CreateEntrepreneur
 		arg.Address,
 		arg.DirectorName,
 	)
-	var i Entrepreneur
+	var i CreateEntrepreneurRow
 	err := row.Scan(
 		&i.ID,
 		&i.InnID,
@@ -74,7 +96,7 @@ func (q *Queries) CreateEntrepreneur(ctx context.Context, arg CreateEntrepreneur
 		&i.RegistrationDate,
 		&i.RegistrationNumber,
 		&i.LegalForm,
-		&i.IfutCode,
+		&i.IfutCodeID,
 		&i.DbibtCode,
 		&i.ActivityStatus,
 		&i.CharterFund,
@@ -101,11 +123,12 @@ func (q *Queries) DeleteEntrepreneur(ctx context.Context, id uuid.UUID) error {
 
 const getEntrepreneurByID = `-- name: GetEntrepreneurByID :one
 SELECT e.id, e.inn_id, i.name as inn_name, e.legal_name, e.registration_authority,
-    e.registration_date, e.registration_number, e.legal_form, e.ifut_code,
-    e.dbibt_code, e.activity_status, e.charter_fund, e.founders, e.email,
-    e.phone, e.mhobt_code, e.address, e.director_name, e.created_at
+    e.registration_date, e.registration_number, e.legal_form, e.ifut_code_id,
+    ic.name as ifut_code_name, e.dbibt_code, e.activity_status, e.charter_fund,
+    e.founders, e.email, e.phone, e.mhobt_code, e.address, e.director_name, e.created_at
 FROM entrepreneurs e
 JOIN inns i ON e.inn_id = i.id
+LEFT JOIN ifut_codes ic ON e.ifut_code_id = ic.id
 WHERE e.id = $1
 `
 
@@ -118,7 +141,8 @@ type GetEntrepreneurByIDRow struct {
 	RegistrationDate      string
 	RegistrationNumber    string
 	LegalForm             string
-	IfutCode              int32
+	IfutCodeID            uuid.NullUUID
+	IfutCodeName          sql.NullString
 	DbibtCode             int32
 	ActivityStatus        bool
 	CharterFund           int32
@@ -143,7 +167,8 @@ func (q *Queries) GetEntrepreneurByID(ctx context.Context, id uuid.UUID) (GetEnt
 		&i.RegistrationDate,
 		&i.RegistrationNumber,
 		&i.LegalForm,
-		&i.IfutCode,
+		&i.IfutCodeID,
+		&i.IfutCodeName,
 		&i.DbibtCode,
 		&i.ActivityStatus,
 		&i.CharterFund,
@@ -165,7 +190,7 @@ SET legal_name = $2,
     registration_date = $4,
     registration_number = $5,
     legal_form = $6,
-    ifut_code = $7,
+    ifut_code_id = $7,
     dbibt_code = $8,
     activity_status = $9,
     charter_fund = $10,
@@ -177,7 +202,7 @@ SET legal_name = $2,
     director_name = $16
 WHERE id = $1
 RETURNING id, inn_id, legal_name, registration_authority, registration_date,
-    registration_number, legal_form, ifut_code, dbibt_code,
+    registration_number, legal_form, ifut_code_id, dbibt_code,
     activity_status, charter_fund, founders, email,
     phone, mhobt_code, address, director_name, created_at
 `
@@ -189,7 +214,7 @@ type UpdateEntrepreneurParams struct {
 	RegistrationDate      string
 	RegistrationNumber    string
 	LegalForm             string
-	IfutCode              int32
+	IfutCodeID            uuid.NullUUID
 	DbibtCode             int32
 	ActivityStatus        bool
 	CharterFund           int32
@@ -201,7 +226,28 @@ type UpdateEntrepreneurParams struct {
 	DirectorName          string
 }
 
-func (q *Queries) UpdateEntrepreneur(ctx context.Context, arg UpdateEntrepreneurParams) (Entrepreneur, error) {
+type UpdateEntrepreneurRow struct {
+	ID                    uuid.UUID
+	InnID                 uuid.UUID
+	LegalName             string
+	RegistrationAuthority string
+	RegistrationDate      string
+	RegistrationNumber    string
+	LegalForm             string
+	IfutCodeID            uuid.NullUUID
+	DbibtCode             int32
+	ActivityStatus        bool
+	CharterFund           int32
+	Founders              string
+	Email                 string
+	Phone                 string
+	MhobtCode             string
+	Address               string
+	DirectorName          string
+	CreatedAt             time.Time
+}
+
+func (q *Queries) UpdateEntrepreneur(ctx context.Context, arg UpdateEntrepreneurParams) (UpdateEntrepreneurRow, error) {
 	row := q.db.QueryRowContext(ctx, updateEntrepreneur,
 		arg.ID,
 		arg.LegalName,
@@ -209,7 +255,7 @@ func (q *Queries) UpdateEntrepreneur(ctx context.Context, arg UpdateEntrepreneur
 		arg.RegistrationDate,
 		arg.RegistrationNumber,
 		arg.LegalForm,
-		arg.IfutCode,
+		arg.IfutCodeID,
 		arg.DbibtCode,
 		arg.ActivityStatus,
 		arg.CharterFund,
@@ -220,7 +266,7 @@ func (q *Queries) UpdateEntrepreneur(ctx context.Context, arg UpdateEntrepreneur
 		arg.Address,
 		arg.DirectorName,
 	)
-	var i Entrepreneur
+	var i UpdateEntrepreneurRow
 	err := row.Scan(
 		&i.ID,
 		&i.InnID,
@@ -229,7 +275,7 @@ func (q *Queries) UpdateEntrepreneur(ctx context.Context, arg UpdateEntrepreneur
 		&i.RegistrationDate,
 		&i.RegistrationNumber,
 		&i.LegalForm,
-		&i.IfutCode,
+		&i.IfutCodeID,
 		&i.DbibtCode,
 		&i.ActivityStatus,
 		&i.CharterFund,
