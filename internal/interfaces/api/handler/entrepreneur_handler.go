@@ -3,12 +3,14 @@ package handler
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 
 	appent "github.com/prodonik/bank_app/internal/application/entrepreneur"
@@ -40,7 +42,7 @@ func NewEntrepreneurHandler(entrepreneurService *appent.Service) *EntrepreneurHa
 func (h *EntrepreneurHandler) Create(c *gin.Context) {
 	var req dto.CreateEntrepreneurRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, dto.ErrorResponse{Error: err.Error()})
+		c.JSON(http.StatusBadRequest, dto.ErrorResponse{Error: formatValidationErrors(err)})
 		return
 	}
 
@@ -286,4 +288,34 @@ func handleEntrepreneurError(c *gin.Context, err error) {
 	default:
 		c.JSON(http.StatusInternalServerError, dto.ErrorResponse{Error: "internal server error"})
 	}
+}
+
+func formatValidationErrors(err error) string {
+	var ve validator.ValidationErrors
+	if !errors.As(err, &ve) {
+		return err.Error()
+	}
+
+	msgs := make([]string, 0, len(ve))
+	for _, fe := range ve {
+		field := fe.Field()
+		switch fe.Tag() {
+		case "required":
+			msgs = append(msgs, fmt.Sprintf("%s is required", field))
+		case "min":
+			msgs = append(msgs, fmt.Sprintf("%s must be at least %s characters", field, fe.Param()))
+		case "max":
+			msgs = append(msgs, fmt.Sprintf("%s must be at most %s characters", field, fe.Param()))
+		case "email":
+			msgs = append(msgs, fmt.Sprintf("%s must be a valid email address", field))
+		default:
+			msgs = append(msgs, fmt.Sprintf("%s is invalid", field))
+		}
+	}
+
+	result := msgs[0]
+	for i := 1; i < len(msgs); i++ {
+		result += "; " + msgs[i]
+	}
+	return result
 }
