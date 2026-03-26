@@ -1,7 +1,9 @@
 package handler
 
 import (
+	"encoding/json"
 	"errors"
+	"log"
 	"net/http"
 	"strconv"
 	"time"
@@ -41,6 +43,9 @@ func (h *EntrepreneurHandler) Create(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, dto.ErrorResponse{Error: err.Error()})
 		return
 	}
+
+	reqJSON, _ := json.Marshal(req)
+	log.Printf("entrepreneur: incoming create request: %s", string(reqJSON))
 
 	activityStatus := true
 	if req.ActivityStatus != nil {
