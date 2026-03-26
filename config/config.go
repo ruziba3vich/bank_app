@@ -20,6 +20,9 @@ type Config struct {
 	JWTSecret          string
 	AccessTokenExpiry  time.Duration
 	RefreshTokenExpiry time.Duration
+
+	SQBBaseURL   string
+	SQBLocalAddr string
 }
 
 func (c *Config) DatabaseURL() string {
@@ -56,6 +59,8 @@ func Load() (*Config, error) {
 		JWTSecret:          getEnv("JWT_SECRET", ""),
 		AccessTokenExpiry:  accessExpiry,
 		RefreshTokenExpiry: refreshExpiry,
+		SQBBaseURL:         getEnv("SQB_BASE_URL", "https://ocrm.sqb.uz/backend/leads"),
+		SQBLocalAddr:       getEnv("SQB_LOCAL_ADDR", "46.8.176.85"),
 	}
 
 	if cfg.JWTSecret == "" {
