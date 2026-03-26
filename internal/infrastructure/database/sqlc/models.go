@@ -10,6 +10,45 @@ import (
 	"github.com/google/uuid"
 )
 
+type City struct {
+	ID        uuid.UUID
+	Name      string
+	CreatedAt time.Time
+}
+
+type Entrepreneur struct {
+	ID                    uuid.UUID
+	InnID                 uuid.UUID
+	LegalName             string
+	RegistrationAuthority string
+	RegistrationDate      string
+	RegistrationNumber    string
+	LegalForm             string
+	DbibtCode             int32
+	ActivityStatus        bool
+	CharterFund           int32
+	Founders              string
+	Email                 string
+	Phone                 string
+	MhobtCode             string
+	Address               string
+	DirectorName          string
+	CreatedAt             time.Time
+	IfutCodeID            uuid.NullUUID
+}
+
+type IfutCode struct {
+	ID        uuid.UUID
+	Name      string
+	CreatedAt time.Time
+}
+
+type Inn struct {
+	ID        uuid.UUID
+	Name      string
+	CreatedAt time.Time
+}
+
 type User struct {
 	ID           uuid.UUID
 	FullName     string

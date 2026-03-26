@@ -12,3 +12,13 @@ WHERE login = $1;
 SELECT id, full_name, role, login, password_hash, status, created_at
 FROM users
 WHERE id = $1;
+
+-- name: UpdateUser :one
+UPDATE users
+SET full_name = $2, role = $3, status = $4
+WHERE id = $1
+RETURNING id, full_name, role, login, password_hash, status, created_at;
+
+-- name: DeleteUser :exec
+DELETE FROM users
+WHERE id = $1;

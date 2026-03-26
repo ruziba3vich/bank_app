@@ -18,7 +18,6 @@ type RegisterRequest struct {
 type LoginRequest struct {
 	Login    string `json:"login" binding:"required"`
 	Password string `json:"password" binding:"required"`
-	DeviceID string `json:"device_id" binding:"required"`
 }
 
 type RefreshRequest struct {
@@ -26,9 +25,16 @@ type RefreshRequest struct {
 	DeviceID     string `json:"device_id" binding:"required"`
 }
 
+type UpdateUserRequest struct {
+	FullName *string `json:"full_name"`
+	Role     *string `json:"role"`
+	Status   *bool   `json:"status"`
+}
+
 type AuthResponse struct {
 	AccessToken  string       `json:"access_token"`
 	RefreshToken string       `json:"refresh_token"`
+	DeviceID     string       `json:"device_id"`
 	User         UserResponse `json:"user"`
 }
 
@@ -39,6 +45,13 @@ type UserResponse struct {
 	Login     string    `json:"login"`
 	Status    bool      `json:"status"`
 	CreatedAt time.Time `json:"created_at"`
+}
+
+type UserListResponse struct {
+	Users  []UserResponse `json:"users"`
+	Total  int            `json:"total"`
+	Limit  int            `json:"limit"`
+	Offset int            `json:"offset"`
 }
 
 type ErrorResponse struct {
@@ -56,10 +69,24 @@ func NewUserResponse(u *domain.User) UserResponse {
 	}
 }
 
-func NewAuthResponse(accessToken, refreshToken string, u *domain.User) AuthResponse {
+func NewUserListResponse(users []*domain.User, total, limit, offset int) UserListResponse {
+	resp := UserListResponse{
+		Users:  make([]UserResponse, 0, len(users)),
+		Total:  total,
+		Limit:  limit,
+		Offset: offset,
+	}
+	for _, u := range users {
+		resp.Users = append(resp.Users, NewUserResponse(u))
+	}
+	return resp
+}
+
+func NewAuthResponse(accessToken, refreshToken, deviceID string, u *domain.User) AuthResponse {
 	return AuthResponse{
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
+		DeviceID:     deviceID,
 		User:         NewUserResponse(u),
 	}
 }
