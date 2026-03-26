@@ -6,6 +6,8 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
+	"io"
+	"log"
 	"net"
 	"net/http"
 	"time"
@@ -102,6 +104,8 @@ func (c *Client) SendLead(ctx context.Context, e *domain.Entrepreneur) (*LeadRes
 		return nil, fmt.Errorf("sqb: failed to marshal lead: %w", err)
 	}
 
+	log.Printf("sqb: sending lead request: %s", string(body))
+
 	url := c.baseURL + "/api/v1/leads/gov"
 	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(body))
 	if err != nil {
@@ -116,9 +120,16 @@ func (c *Client) SendLead(ctx context.Context, e *domain.Entrepreneur) (*LeadRes
 	}
 	defer resp.Body.Close()
 
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("sqb: failed to read response body (status %d): %w", resp.StatusCode, err)
+	}
+
+	log.Printf("sqb: response status=%d body=%s", resp.StatusCode, string(respBody))
+
 	var leadResp LeadResponse
-	if err := json.NewDecoder(resp.Body).Decode(&leadResp); err != nil {
-		return nil, fmt.Errorf("sqb: failed to decode response (status %d): %w", resp.StatusCode, err)
+	if err := json.Unmarshal(respBody, &leadResp); err != nil {
+		return nil, fmt.Errorf("sqb: failed to decode response (status %d, body: %s): %w", resp.StatusCode, string(respBody), err)
 	}
 
 	if resp.StatusCode == http.StatusCreated || resp.StatusCode == http.StatusOK {
