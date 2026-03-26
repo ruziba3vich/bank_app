@@ -9,10 +9,10 @@ import (
 )
 
 type CreateEntrepreneurRequest struct {
-	Inn                   string `json:"inn" binding:"required"`
+	Inn                   string `json:"inn" binding:"required,min=9,max=14"`
 	LegalName             string `json:"legal_name"`
 	RegistrationAuthority string `json:"registration_authority"`
-	RegistrationDate      string `json:"registration_date"`
+	RegistrationDate      string `json:"registration_date" binding:"required"`
 	RegistrationNumber    string `json:"registration_number"`
 	LegalForm             string `json:"legal_form"`
 	IfutCode              string `json:"ifut_code"`
@@ -20,8 +20,8 @@ type CreateEntrepreneurRequest struct {
 	ActivityStatus        *bool  `json:"activity_status"`
 	CharterFund           int32  `json:"charter_fund"`
 	Founders              string `json:"founders"`
-	Email                 string `json:"email"`
-	Phone                 string `json:"phone"`
+	Email                 string `json:"email" binding:"required,email"`
+	Phone                 string `json:"phone" binding:"required,min=9,max=32"`
 	MhobtCode             string `json:"mhobt_code"`
 	Address               string `json:"address"`
 	DirectorName          string `json:"director_name"`
