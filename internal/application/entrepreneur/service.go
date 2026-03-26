@@ -3,22 +3,25 @@ package entrepreneur
 import (
 	"context"
 	"errors"
+	"log"
 
 	"github.com/google/uuid"
 
 	domain "github.com/prodonik/bank_app/internal/domain/entrepreneur"
 	ifutdomain "github.com/prodonik/bank_app/internal/domain/ifut_code"
 	domainn "github.com/prodonik/bank_app/internal/domain/inn"
+	"github.com/prodonik/bank_app/internal/infrastructure/sqb"
 )
 
 type Service struct {
 	repo         domain.Repository
 	innRepo      domainn.Repository
 	ifutCodeRepo ifutdomain.Repository
+	sqbClient    *sqb.Client
 }
 
-func NewService(repo domain.Repository, innRepo domainn.Repository, ifutCodeRepo ifutdomain.Repository) *Service {
-	return &Service{repo: repo, innRepo: innRepo, ifutCodeRepo: ifutCodeRepo}
+func NewService(repo domain.Repository, innRepo domainn.Repository, ifutCodeRepo ifutdomain.Repository, sqbClient *sqb.Client) *Service {
+	return &Service{repo: repo, innRepo: innRepo, ifutCodeRepo: ifutCodeRepo, sqbClient: sqbClient}
 }
 
 type CreateInput struct {
@@ -110,7 +113,21 @@ func (s *Service) Create(ctx context.Context, input CreateInput) (*domain.Entrep
 		DirectorName:          input.DirectorName,
 	}
 
-	return s.repo.Create(ctx, e)
+	created, err := s.repo.Create(ctx, e)
+	if err != nil {
+		return nil, err
+	}
+
+	if s.sqbClient != nil {
+		resp, err := s.sqbClient.SendLead(ctx, created)
+		if err != nil {
+			log.Printf("sqb: failed to send lead for entrepreneur %s: %v", created.ID, err)
+		} else {
+			log.Printf("sqb: lead sent for entrepreneur %s — status: %s, errorCode: %s, errorDescription: %s", created.ID, resp.Status, resp.ErrorCode, resp.ErrorDescription)
+		}
+	}
+
+	return created, nil
 }
 
 func (s *Service) GetByID(ctx context.Context, id uuid.UUID) (*domain.Entrepreneur, error) {
