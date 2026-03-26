@@ -17,6 +17,7 @@ import (
 	"github.com/prodonik/bank_app/internal/infrastructure/auth"
 	"github.com/prodonik/bank_app/internal/infrastructure/database"
 	"github.com/prodonik/bank_app/internal/infrastructure/repository"
+	"github.com/prodonik/bank_app/internal/infrastructure/sqb"
 	"github.com/prodonik/bank_app/internal/interfaces/api"
 	"github.com/prodonik/bank_app/internal/interfaces/api/handler"
 )
@@ -61,12 +62,15 @@ func main() {
 	ifutCodeRepo := repository.NewIfutCodeRepository(db)
 	entrepreneurRepo := repository.NewEntrepreneurRepository(db)
 
+	// SQB client
+	sqbClient := sqb.NewClient(cfg.SQBBaseURL, cfg.SQBLocalAddr)
+
 	// Application
 	userService := appuser.NewService(userRepo, sessionRepo, jwtService)
 	cityService := appcity.NewService(cityRepo)
 	innService := appinn.NewService(innRepo)
 	ifutCodeService := appifut.NewService(ifutCodeRepo)
-	entrepreneurService := appent.NewService(entrepreneurRepo, innRepo, ifutCodeRepo)
+	entrepreneurService := appent.NewService(entrepreneurRepo, innRepo, ifutCodeRepo, sqbClient)
 
 	// Interfaces
 	userHandler := handler.NewUserHandler(userService)
