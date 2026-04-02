@@ -59,6 +59,8 @@ definitions:
       ifut_code:
         type: string
       inn:
+        maxLength: 14
+        minLength: 9
         type: string
       legal_form:
         type: string
@@ -67,6 +69,8 @@ definitions:
       mhobt_code:
         type: string
       phone:
+        maxLength: 32
+        minLength: 9
         type: string
       registration_authority:
         type: string
@@ -75,7 +79,10 @@ definitions:
       registration_number:
         type: string
     required:
+    - email
     - inn
+    - phone
+    - registration_date
     type: object
   dto.EntrepreneurListResponse:
     properties:
