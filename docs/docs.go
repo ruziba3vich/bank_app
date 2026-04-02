@@ -1373,7 +1373,10 @@ const docTemplate = `{
         "dto.CreateEntrepreneurRequest": {
             "type": "object",
             "required": [
-                "inn"
+                "email",
+                "inn",
+                "phone",
+                "registration_date"
             ],
             "properties": {
                 "activity_status": {
@@ -1401,7 +1404,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "inn": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 14,
+                    "minLength": 9
                 },
                 "legal_form": {
                     "type": "string"
@@ -1413,7 +1418,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "phone": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 32,
+                    "minLength": 9
                 },
                 "registration_authority": {
                     "type": "string"
