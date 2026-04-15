@@ -23,6 +23,10 @@ type Config struct {
 
 	SQBBaseURL   string
 	SQBLocalAddr string
+
+	BirdarchaBaseURL      string
+	BirdarchaSyncInterval time.Duration
+	BirdarchaCutoffDate   string
 }
 
 func (c *Config) DatabaseURL() string {
@@ -48,6 +52,11 @@ func Load() (*Config, error) {
 		return nil, fmt.Errorf("invalid REFRESH_TOKEN_EXPIRY: %w", err)
 	}
 
+	birdarchaInterval, err := time.ParseDuration(getEnv("BIRDARCHA_SYNC_INTERVAL", "10m"))
+	if err != nil {
+		return nil, fmt.Errorf("invalid BIRDARCHA_SYNC_INTERVAL: %w", err)
+	}
+
 	cfg := &Config{
 		DBHost:             getEnv("DB_HOST", "localhost"),
 		DBPort:             dbPort,
@@ -61,6 +70,10 @@ func Load() (*Config, error) {
 		RefreshTokenExpiry: refreshExpiry,
 		SQBBaseURL:         getEnv("SQB_BASE_URL", "https://ocrm.sqb.uz/backend/leads"),
 		SQBLocalAddr:       getEnv("SQB_LOCAL_ADDR", "46.8.176.85"),
+
+		BirdarchaBaseURL:      getEnv("BIRDARCHA_BASE_URL", "https://api.birdarcha.uz"),
+		BirdarchaSyncInterval: birdarchaInterval,
+		BirdarchaCutoffDate:   getEnv("BIRDARCHA_CUTOFF_DATE", "15.04.2026"),
 	}
 
 	if cfg.JWTSecret == "" {
