@@ -65,6 +65,7 @@ type EntrepreneurResponse struct {
 	MhobtCode             string     `json:"mhobt_code"`
 	Address               string     `json:"address"`
 	DirectorName          string     `json:"director_name"`
+	SqbApiError           *string    `json:"sqb_api_error"`
 	CreatedAt             time.Time  `json:"created_at"`
 }
 
@@ -96,6 +97,7 @@ func NewEntrepreneurResponse(e *domain.Entrepreneur) EntrepreneurResponse {
 		MhobtCode:             e.MhobtCode,
 		Address:               e.Address,
 		DirectorName:          e.DirectorName,
+		SqbApiError:           e.SqbApiError,
 		CreatedAt:             e.CreatedAt,
 	}
 }

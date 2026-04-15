@@ -225,6 +225,60 @@ func (h *EntrepreneurHandler) Delete(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "entrepreneur deleted successfully"})
 }
 
+// GetSqbFailed godoc
+// @Summary Get entrepreneurs with SQB errors
+// @Description Returns a paginated list of entrepreneurs that failed to send to SQB
+// @Tags entrepreneurs
+// @Produce json
+// @Security BearerAuth
+// @Param limit query int false "Limit (default 20, max 100)"
+// @Param offset query int false "Offset (default 0)"
+// @Success 200 {object} dto.EntrepreneurListResponse "Failed entrepreneurs list"
+// @Failure 401 {object} dto.ErrorResponse "Unauthorized"
+// @Failure 500 {object} dto.ErrorResponse "Internal server error"
+// @Router /entrepreneurs/sqb-failed [get]
+func (h *EntrepreneurHandler) GetSqbFailed(c *gin.Context) {
+	limit := 20
+	offset := 0
+	if v := c.Query("limit"); v != "" {
+		if l, err := strconv.Atoi(v); err == nil {
+			limit = l
+		}
+	}
+	if v := c.Query("offset"); v != "" {
+		if o, err := strconv.Atoi(v); err == nil {
+			offset = o
+		}
+	}
+
+	entrepreneurs, total, err := h.entrepreneurService.GetAllWithSqbError(c.Request.Context(), limit, offset)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, dto.ErrorResponse{Error: "internal server error"})
+		return
+	}
+
+	c.JSON(http.StatusOK, dto.NewEntrepreneurListResponse(entrepreneurs, total, limit, offset))
+}
+
+// RetrySqbFailed godoc
+// @Summary Retry sending failed entrepreneurs to SQB
+// @Description Fetches all entrepreneurs with sqb_api_error and resends them to SQB. Clears the error on success.
+// @Tags entrepreneurs
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} map[string]interface{} "Retry results"
+// @Failure 401 {object} dto.ErrorResponse "Unauthorized"
+// @Failure 500 {object} dto.ErrorResponse "Internal server error"
+// @Router /entrepreneurs/sqb-retry [post]
+func (h *EntrepreneurHandler) RetrySqbFailed(c *gin.Context) {
+	sent, failed := h.entrepreneurService.RetrySqbFailed(c.Request.Context())
+	c.JSON(http.StatusOK, gin.H{
+		"message": "retry complete",
+		"sent":    sent,
+		"failed":  failed,
+	})
+}
+
 func parseEntrepreneurFilter(c *gin.Context) (domain.EntrepreneurFilter, error) {
 	var filter domain.EntrepreneurFilter
 

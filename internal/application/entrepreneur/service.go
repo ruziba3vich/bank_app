@@ -125,9 +125,17 @@ func (s *Service) Create(ctx context.Context, input CreateInput) (*domain.Entrep
 	if s.sqbClient != nil {
 		resp, err := s.sqbClient.SendLead(ctx, created)
 		if err != nil {
+			errMsg := err.Error()
 			log.Printf("sqb: failed to send lead for entrepreneur %s: %v", created.ID, err)
+			_ = s.repo.SetSqbApiError(ctx, created.ID, &errMsg)
+			created.SqbApiError = &errMsg
+		} else if resp.ErrorCode != "" {
+			errMsg := resp.ErrorCode + ": " + resp.ErrorDescription
+			log.Printf("sqb: lead error for entrepreneur %s — %s", created.ID, errMsg)
+			_ = s.repo.SetSqbApiError(ctx, created.ID, &errMsg)
+			created.SqbApiError = &errMsg
 		} else {
-			log.Printf("sqb: lead sent for entrepreneur %s — status: %s, errorCode: %s, errorDescription: %s", created.ID, resp.Status, resp.ErrorCode, resp.ErrorDescription)
+			log.Printf("sqb: lead sent for entrepreneur %s — status: %s", created.ID, resp.Status)
 		}
 	}
 
@@ -217,6 +225,56 @@ func (s *Service) Update(ctx context.Context, id uuid.UUID, input UpdateInput) (
 	}
 
 	return s.repo.Update(ctx, existing)
+}
+
+func (s *Service) GetAllWithSqbError(ctx context.Context, limit, offset int) ([]*domain.Entrepreneur, int, error) {
+	if limit <= 0 {
+		limit = 20
+	}
+	if limit > 100 {
+		limit = 100
+	}
+	return s.repo.GetAllWithSqbError(ctx, limit, offset)
+}
+
+func (s *Service) RetrySqbFailed(ctx context.Context) (sent, failed int) {
+	entrepreneurs, _, err := s.repo.GetAllWithSqbError(ctx, 1000, 0)
+	if err != nil {
+		log.Printf("sqb-retry: failed to fetch failed records: %v", err)
+		return 0, 0
+	}
+
+	if len(entrepreneurs) == 0 {
+		log.Println("sqb-retry: no failed records to retry")
+		return 0, 0
+	}
+
+	log.Printf("sqb-retry: retrying %d records...", len(entrepreneurs))
+
+	for _, e := range entrepreneurs {
+		if s.sqbClient == nil {
+			break
+		}
+		resp, err := s.sqbClient.SendLead(ctx, e)
+		if err != nil {
+			errMsg := err.Error()
+			_ = s.repo.SetSqbApiError(ctx, e.ID, &errMsg)
+			log.Printf("sqb-retry: failed %s: %v", e.ID, err)
+			failed++
+		} else if resp.ErrorCode != "" {
+			errMsg := resp.ErrorCode + ": " + resp.ErrorDescription
+			_ = s.repo.SetSqbApiError(ctx, e.ID, &errMsg)
+			log.Printf("sqb-retry: error %s: %s", e.ID, errMsg)
+			failed++
+		} else {
+			_ = s.repo.SetSqbApiError(ctx, e.ID, nil)
+			log.Printf("sqb-retry: sent %s — success", e.ID)
+			sent++
+		}
+	}
+
+	log.Printf("sqb-retry: complete — sent=%d, failed=%d", sent, failed)
+	return sent, failed
 }
 
 func (s *Service) Delete(ctx context.Context, id uuid.UUID) error {
