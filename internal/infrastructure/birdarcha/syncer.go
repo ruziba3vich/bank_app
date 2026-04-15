@@ -153,10 +153,14 @@ func (s *Syncer) sync(ctx context.Context) error {
 
 	log.Printf("birdarcha-syncer: found %d new entities, processing...", len(newItems))
 
-	// Process oldest first (reverse order) so last_stored_id advances correctly
+	// Process oldest first (reverse order)
+	// Track the last contiguously successful ID — stop advancing on first failure
+	// so failed items are retried next cycle
 	created := 0
 	skipped := 0
 	failed := 0
+	lastSuccessID := lastID
+	hitFailure := false
 
 	for i := len(newItems) - 1; i >= 0; i-- {
 		item := newItems[i]
@@ -166,6 +170,7 @@ func (s *Syncer) sync(ctx context.Context) error {
 		if err != nil {
 			log.Printf("birdarcha-syncer: failed to fetch detail for id=%d tin=%d: %v", item.ID, item.TIN, err)
 			failed++
+			hitFailure = true
 			continue
 		}
 
@@ -181,16 +186,22 @@ func (s *Syncer) sync(ctx context.Context) error {
 			} else {
 				log.Printf("birdarcha-syncer: failed to create tin=%d name=%s: %v", item.TIN, item.Name, err)
 				failed++
+				hitFailure = true
 				continue
 			}
 		} else {
 			created++
 		}
+
+		// Only advance last_stored_id if we haven't hit any failure yet
+		if !hitFailure {
+			lastSuccessID = item.ID
+		}
 	}
 
-	// Update last_stored_id to the newest ID we saw
-	if firstIDInBatch > 0 {
-		if err := s.setLastStoredID(ctx, firstIDInBatch); err != nil {
+	// Update last_stored_id only up to the last contiguous success
+	if lastSuccessID > lastID {
+		if err := s.setLastStoredID(ctx, lastSuccessID); err != nil {
 			log.Printf("birdarcha-syncer: failed to update last_stored_id: %v", err)
 		}
 	}
