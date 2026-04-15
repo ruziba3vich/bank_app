@@ -228,6 +228,13 @@ definitions:
     - login
     - password
     type: object
+  dto.UpdateBirdarchaTokenRequest:
+    properties:
+      token:
+        type: string
+    required:
+    - token
+    type: object
   dto.UpdateCityRequest:
     properties:
       name:
@@ -717,6 +724,44 @@ paths:
       security:
       - BearerAuth: []
       summary: Update entrepreneur
+      tags:
+      - entrepreneurs
+  /entrepreneurs/birdarcha-token:
+    put:
+      consumes:
+      - application/json
+      description: Updates the birdarcha API access token used by the background syncer
+      parameters:
+      - description: New token
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateBirdarchaTokenRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Token updated
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update birdarcha access token
       tags:
       - entrepreneurs
   /entrepreneurs/sqb-failed:

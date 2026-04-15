@@ -79,6 +79,7 @@ func NewRouter(userHandler *handler.UserHandler, cityHandler *handler.CityHandle
 			entrepreneurs.GET("", entrepreneurHandler.GetAll)
 			entrepreneurs.GET("/sqb-failed", entrepreneurHandler.GetSqbFailed)
 			entrepreneurs.POST("/sqb-retry", entrepreneurHandler.RetrySqbFailed)
+			entrepreneurs.PUT("/birdarcha-token", entrepreneurHandler.UpdateBirdarchaToken)
 			entrepreneurs.GET("/:id", entrepreneurHandler.GetByID)
 			entrepreneurs.PUT("/:id", entrepreneurHandler.Update)
 			entrepreneurs.DELETE("/:id", entrepreneurHandler.Delete)

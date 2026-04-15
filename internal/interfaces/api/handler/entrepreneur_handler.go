@@ -279,6 +279,34 @@ func (h *EntrepreneurHandler) RetrySqbFailed(c *gin.Context) {
 	})
 }
 
+// UpdateBirdarchaToken godoc
+// @Summary Update birdarcha access token
+// @Description Updates the birdarcha API access token used by the background syncer
+// @Tags entrepreneurs
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param request body dto.UpdateBirdarchaTokenRequest true "New token"
+// @Success 200 {object} map[string]string "Token updated"
+// @Failure 400 {object} dto.ErrorResponse "Invalid request"
+// @Failure 401 {object} dto.ErrorResponse "Unauthorized"
+// @Failure 500 {object} dto.ErrorResponse "Internal server error"
+// @Router /entrepreneurs/birdarcha-token [put]
+func (h *EntrepreneurHandler) UpdateBirdarchaToken(c *gin.Context) {
+	var req dto.UpdateBirdarchaTokenRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, dto.ErrorResponse{Error: "token is required"})
+		return
+	}
+
+	if err := h.entrepreneurService.UpdateBirdarchaToken(c.Request.Context(), req.Token); err != nil {
+		c.JSON(http.StatusInternalServerError, dto.ErrorResponse{Error: "failed to update token"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "birdarcha token updated"})
+}
+
 func parseEntrepreneurFilter(c *gin.Context) (domain.EntrepreneurFilter, error) {
 	var filter domain.EntrepreneurFilter
 
