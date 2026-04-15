@@ -2,6 +2,7 @@ package entrepreneur
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"log"
 	"strings"
@@ -19,10 +20,11 @@ type Service struct {
 	innRepo      domainn.Repository
 	ifutCodeRepo ifutdomain.Repository
 	sqbClient    *sqb.Client
+	db           *sql.DB
 }
 
-func NewService(repo domain.Repository, innRepo domainn.Repository, ifutCodeRepo ifutdomain.Repository, sqbClient *sqb.Client) *Service {
-	return &Service{repo: repo, innRepo: innRepo, ifutCodeRepo: ifutCodeRepo, sqbClient: sqbClient}
+func NewService(repo domain.Repository, innRepo domainn.Repository, ifutCodeRepo ifutdomain.Repository, sqbClient *sqb.Client, db *sql.DB) *Service {
+	return &Service{repo: repo, innRepo: innRepo, ifutCodeRepo: ifutCodeRepo, sqbClient: sqbClient, db: db}
 }
 
 type CreateInput struct {
@@ -275,6 +277,15 @@ func (s *Service) RetrySqbFailed(ctx context.Context) (sent, failed int) {
 
 	log.Printf("sqb-retry: complete — sent=%d, failed=%d", sent, failed)
 	return sent, failed
+}
+
+func (s *Service) UpdateBirdarchaToken(ctx context.Context, token string) error {
+	_, err := s.db.ExecContext(ctx, `
+		INSERT INTO syncer_state (key, value, updated_at)
+		VALUES ('birdarcha_token', $1, NOW())
+		ON CONFLICT (key) DO UPDATE SET value = $1, updated_at = NOW()
+	`, token)
+	return err
 }
 
 func (s *Service) Delete(ctx context.Context, id uuid.UUID) error {

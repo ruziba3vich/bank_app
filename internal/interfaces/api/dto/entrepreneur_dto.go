@@ -69,6 +69,10 @@ type EntrepreneurResponse struct {
 	CreatedAt             time.Time  `json:"created_at"`
 }
 
+type UpdateBirdarchaTokenRequest struct {
+	Token string `json:"token" binding:"required"`
+}
+
 type EntrepreneurListResponse struct {
 	Entrepreneurs []EntrepreneurResponse `json:"entrepreneurs"`
 	Total         int                    `json:"total"`

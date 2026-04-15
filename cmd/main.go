@@ -72,7 +72,7 @@ func main() {
 	cityService := appcity.NewService(cityRepo)
 	innService := appinn.NewService(innRepo)
 	ifutCodeService := appifut.NewService(ifutCodeRepo)
-	entrepreneurService := appent.NewService(entrepreneurRepo, innRepo, ifutCodeRepo, sqbClient)
+	entrepreneurService := appent.NewService(entrepreneurRepo, innRepo, ifutCodeRepo, sqbClient, db)
 
 	// Birdarcha syncer (token is loaded from DB at each sync cycle)
 	birdarchaClient := birdarcha.NewClient(cfg.BirdarchaBaseURL, "")
