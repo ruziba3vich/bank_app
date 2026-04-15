@@ -110,9 +110,23 @@ func (s *Syncer) sync(ctx context.Context) error {
 
 	log.Printf("birdarcha-syncer: starting sync (last_stored_id=%d)", lastID)
 
+	// First run: just grab the newest ID to bootstrap the cursor
+	if lastID == 0 {
+		list, err := s.client.FetchList(ctx, 0, 1)
+		if err != nil {
+			return fmt.Errorf("failed to bootstrap last_stored_id: %w", err)
+		}
+		if len(list.Data) > 0 {
+			if err := s.setLastStoredID(ctx, list.Data[0].ID); err != nil {
+				return fmt.Errorf("failed to set initial last_stored_id: %w", err)
+			}
+			log.Printf("birdarcha-syncer: bootstrapped last_stored_id=%d, will sync new data from next cycle", list.Data[0].ID)
+		}
+		return nil
+	}
+
 	// Collect all new items first (they come newest-first from the API)
 	var newItems []ListItem
-	firstIDInBatch := 0
 	done := false
 
 	for page := 0; !done; page++ {
@@ -126,10 +140,6 @@ func (s *Syncer) sync(ctx context.Context) error {
 		}
 
 		for _, item := range list.Data {
-			if page == 0 && firstIDInBatch == 0 {
-				firstIDInBatch = item.ID
-			}
-
 			// Stop if we've reached the last stored ID
 			if lastID > 0 && item.ID <= lastID {
 				done = true
