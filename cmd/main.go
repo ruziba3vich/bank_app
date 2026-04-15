@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log"
 
 	"github.com/golang-migrate/migrate/v4"
@@ -15,6 +16,7 @@ import (
 	appinn "github.com/prodonik/bank_app/internal/application/inn"
 	appuser "github.com/prodonik/bank_app/internal/application/user"
 	"github.com/prodonik/bank_app/internal/infrastructure/auth"
+	"github.com/prodonik/bank_app/internal/infrastructure/birdarcha"
 	"github.com/prodonik/bank_app/internal/infrastructure/database"
 	"github.com/prodonik/bank_app/internal/infrastructure/repository"
 	"github.com/prodonik/bank_app/internal/infrastructure/sqb"
@@ -71,6 +73,13 @@ func main() {
 	innService := appinn.NewService(innRepo)
 	ifutCodeService := appifut.NewService(ifutCodeRepo)
 	entrepreneurService := appent.NewService(entrepreneurRepo, innRepo, ifutCodeRepo, sqbClient)
+
+	// Birdarcha syncer (token is loaded from DB at each sync cycle)
+	birdarchaClient := birdarcha.NewClient(cfg.BirdarchaBaseURL, "")
+	syncer := birdarcha.NewSyncer(birdarchaClient, entrepreneurService, db, cfg.BirdarchaSyncInterval, cfg.BirdarchaCutoffDate)
+	syncCtx, syncCancel := context.WithCancel(context.Background())
+	defer syncCancel()
+	go syncer.Start(syncCtx)
 
 	// Interfaces
 	userHandler := handler.NewUserHandler(userService)

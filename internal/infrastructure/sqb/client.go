@@ -10,6 +10,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"regexp"
 	"time"
 
 	domain "github.com/prodonik/bank_app/internal/domain/entrepreneur"
@@ -85,6 +86,16 @@ func toISO8601(dateStr string) string {
 	return dateStr
 }
 
+var nonDigitRe = regexp.MustCompile(`[^\d]`)
+
+// sanitizePhone strips all non-digit characters except a leading '+'.
+func sanitizePhone(phone string) string {
+	if len(phone) > 0 && phone[0] == '+' {
+		return "+" + nonDigitRe.ReplaceAllString(phone[1:], "")
+	}
+	return nonDigitRe.ReplaceAllString(phone, "")
+}
+
 func (c *Client) SendLead(ctx context.Context, e *domain.Entrepreneur) (*LeadResponse, error) {
 	req := LeadRequest{
 		ID:        e.ID.String(),
@@ -94,7 +105,7 @@ func (c *Client) SendLead(ctx context.Context, e *domain.Entrepreneur) (*LeadRes
 		OrgForm:   e.LegalForm,
 		EcoOrg:    e.IfutCodeName,
 		Email:     e.Email,
-		Phone:     e.Phone,
+		Phone:     sanitizePhone(e.Phone),
 		AdmCode:   e.MhobtCode,
 		ChiefName: e.DirectorName,
 	}

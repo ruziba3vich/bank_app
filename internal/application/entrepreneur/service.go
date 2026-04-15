@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"log"
+	"strings"
 
 	"github.com/google/uuid"
 
@@ -62,6 +63,9 @@ type UpdateInput struct {
 }
 
 func (s *Service) Create(ctx context.Context, input CreateInput) (*domain.Entrepreneur, error) {
+	// Strip spaces from INN
+	input.InnName = strings.ReplaceAll(input.InnName, " ", "")
+
 	// Resolve INN
 	innRecord, err := s.innRepo.GetByName(ctx, input.InnName)
 	if err != nil {
