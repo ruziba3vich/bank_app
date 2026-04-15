@@ -26,6 +26,7 @@ type Entrepreneur struct {
 	MhobtCode             string
 	Address               string
 	DirectorName          string
+	SqbApiError           *string
 	CreatedAt             time.Time
 }
 

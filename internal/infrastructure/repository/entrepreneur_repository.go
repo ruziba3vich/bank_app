@@ -42,6 +42,7 @@ func (r *EntrepreneurRepository) Create(ctx context.Context, e *domain.Entrepren
 		MhobtCode:             e.MhobtCode,
 		Address:               e.Address,
 		DirectorName:          e.DirectorName,
+		SqbApiError:           toNullString(e.SqbApiError),
 	})
 	if err != nil {
 		return nil, err
@@ -90,6 +91,68 @@ func (r *EntrepreneurRepository) Update(ctx context.Context, e *domain.Entrepren
 
 func (r *EntrepreneurRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	return r.queries.DeleteEntrepreneur(ctx, id)
+}
+
+func (r *EntrepreneurRepository) SetSqbApiError(ctx context.Context, id uuid.UUID, sqbErr *string) error {
+	return r.queries.SetSqbApiError(ctx, sqlc.SetSqbApiErrorParams{
+		ID:          id,
+		SqbApiError: toNullString(sqbErr),
+	})
+}
+
+func (r *EntrepreneurRepository) GetAllWithSqbError(ctx context.Context, limit, offset int) ([]*domain.Entrepreneur, int, error) {
+	countQuery := `SELECT COUNT(*) FROM entrepreneurs WHERE sqb_api_error IS NOT NULL`
+	var total int
+	if err := r.db.QueryRowContext(ctx, countQuery).Scan(&total); err != nil {
+		return nil, 0, fmt.Errorf("failed to count failed entrepreneurs: %w", err)
+	}
+
+	dataQuery := `SELECT e.id, e.inn_id, i.name, e.legal_name, e.registration_authority,
+		e.registration_date, e.registration_number, e.legal_form, e.ifut_code_id,
+		ic.name, e.dbibt_code, e.activity_status, e.charter_fund, e.founders, e.email,
+		e.phone, e.mhobt_code, e.address, e.director_name, e.sqb_api_error, e.created_at
+	FROM entrepreneurs e
+	JOIN inns i ON e.inn_id = i.id
+	LEFT JOIN ifut_codes ic ON e.ifut_code_id = ic.id
+	WHERE e.sqb_api_error IS NOT NULL
+	ORDER BY e.created_at DESC LIMIT $1 OFFSET $2`
+
+	rows, err := r.db.QueryContext(ctx, dataQuery, limit, offset)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to query failed entrepreneurs: %w", err)
+	}
+	defer rows.Close()
+
+	var entrepreneurs []*domain.Entrepreneur
+	for rows.Next() {
+		var e domain.Entrepreneur
+		var ifutCodeID uuid.NullUUID
+		var ifutCodeName sql.NullString
+		var sqbApiError sql.NullString
+		if err := rows.Scan(
+			&e.ID, &e.InnID, &e.InnName, &e.LegalName, &e.RegistrationAuthority,
+			&e.RegistrationDate, &e.RegistrationNumber, &e.LegalForm, &ifutCodeID,
+			&ifutCodeName, &e.DbibtCode, &e.ActivityStatus, &e.CharterFund, &e.Founders,
+			&e.Email, &e.Phone, &e.MhobtCode, &e.Address, &e.DirectorName, &sqbApiError, &e.CreatedAt,
+		); err != nil {
+			return nil, 0, fmt.Errorf("failed to scan entrepreneur: %w", err)
+		}
+		if ifutCodeID.Valid {
+			e.IfutCodeID = &ifutCodeID.UUID
+		}
+		if ifutCodeName.Valid {
+			e.IfutCodeName = ifutCodeName.String
+		}
+		if sqbApiError.Valid {
+			e.SqbApiError = &sqbApiError.String
+		}
+		entrepreneurs = append(entrepreneurs, &e)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, 0, fmt.Errorf("rows iteration error: %w", err)
+	}
+
+	return entrepreneurs, total, nil
 }
 
 func (r *EntrepreneurRepository) GetAll(ctx context.Context, filter domain.EntrepreneurFilter) ([]*domain.Entrepreneur, int, error) {
@@ -149,7 +212,7 @@ func (r *EntrepreneurRepository) GetAll(ctx context.Context, filter domain.Entre
 		`SELECT e.id, e.inn_id, i.name, e.legal_name, e.registration_authority,
 			e.registration_date, e.registration_number, e.legal_form, e.ifut_code_id,
 			ic.name, e.dbibt_code, e.activity_status, e.charter_fund, e.founders, e.email,
-			e.phone, e.mhobt_code, e.address, e.director_name, e.created_at
+			e.phone, e.mhobt_code, e.address, e.director_name, e.sqb_api_error, e.created_at
 		FROM entrepreneurs e
 		JOIN inns i ON e.inn_id = i.id
 		LEFT JOIN ifut_codes ic ON e.ifut_code_id = ic.id%s
@@ -169,11 +232,12 @@ func (r *EntrepreneurRepository) GetAll(ctx context.Context, filter domain.Entre
 		var e domain.Entrepreneur
 		var ifutCodeID uuid.NullUUID
 		var ifutCodeName sql.NullString
+		var sqbApiError sql.NullString
 		if err := rows.Scan(
 			&e.ID, &e.InnID, &e.InnName, &e.LegalName, &e.RegistrationAuthority,
 			&e.RegistrationDate, &e.RegistrationNumber, &e.LegalForm, &ifutCodeID,
 			&ifutCodeName, &e.DbibtCode, &e.ActivityStatus, &e.CharterFund, &e.Founders,
-			&e.Email, &e.Phone, &e.MhobtCode, &e.Address, &e.DirectorName, &e.CreatedAt,
+			&e.Email, &e.Phone, &e.MhobtCode, &e.Address, &e.DirectorName, &sqbApiError, &e.CreatedAt,
 		); err != nil {
 			return nil, 0, fmt.Errorf("failed to scan entrepreneur: %w", err)
 		}
@@ -183,6 +247,9 @@ func (r *EntrepreneurRepository) GetAll(ctx context.Context, filter domain.Entre
 		if ifutCodeName.Valid {
 			e.IfutCodeName = ifutCodeName.String
 		}
+		if sqbApiError.Valid {
+			e.SqbApiError = &sqbApiError.String
+		}
 		entrepreneurs = append(entrepreneurs, &e)
 	}
 	if err := rows.Err(); err != nil {
@@ -190,6 +257,20 @@ func (r *EntrepreneurRepository) GetAll(ctx context.Context, filter domain.Entre
 	}
 
 	return entrepreneurs, total, nil
+}
+
+func toNullString(s *string) sql.NullString {
+	if s == nil {
+		return sql.NullString{}
+	}
+	return sql.NullString{String: *s, Valid: true}
+}
+
+func fromNullString(n sql.NullString) *string {
+	if !n.Valid {
+		return nil
+	}
+	return &n.String
 }
 
 func toNullUUID(id *uuid.UUID) uuid.NullUUID {
@@ -227,6 +308,7 @@ func mapCreateRow(e sqlc.CreateEntrepreneurRow, innName, ifutCodeName string) *d
 		MhobtCode:             e.MhobtCode,
 		Address:               e.Address,
 		DirectorName:          e.DirectorName,
+		SqbApiError:           fromNullString(e.SqbApiError),
 		CreatedAt:             e.CreatedAt,
 	}
 }
@@ -256,6 +338,7 @@ func mapGetByIDRow(e sqlc.GetEntrepreneurByIDRow) *domain.Entrepreneur {
 		MhobtCode:             e.MhobtCode,
 		Address:               e.Address,
 		DirectorName:          e.DirectorName,
+		SqbApiError:           fromNullString(e.SqbApiError),
 		CreatedAt:             e.CreatedAt,
 	}
 }
@@ -281,6 +364,7 @@ func mapUpdateRow(e sqlc.UpdateEntrepreneurRow, innName, ifutCodeName string) *d
 		MhobtCode:             e.MhobtCode,
 		Address:               e.Address,
 		DirectorName:          e.DirectorName,
+		SqbApiError:           fromNullString(e.SqbApiError),
 		CreatedAt:             e.CreatedAt,
 	}
 }

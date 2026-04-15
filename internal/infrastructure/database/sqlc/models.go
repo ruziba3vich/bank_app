@@ -5,6 +5,7 @@
 package sqlc
 
 import (
+	"database/sql"
 	"time"
 
 	"github.com/google/uuid"
@@ -35,6 +36,7 @@ type Entrepreneur struct {
 	DirectorName          string
 	CreatedAt             time.Time
 	IfutCodeID            uuid.NullUUID
+	SqbApiError           sql.NullString
 }
 
 type IfutCode struct {
@@ -47,6 +49,12 @@ type Inn struct {
 	ID        uuid.UUID
 	Name      string
 	CreatedAt time.Time
+}
+
+type SyncerState struct {
+	Key       string
+	Value     string
+	UpdatedAt sql.NullTime
 }
 
 type User struct {

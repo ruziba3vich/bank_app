@@ -466,6 +466,95 @@ const docTemplate = `{
                 }
             }
         },
+        "/entrepreneurs/sqb-failed": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns a paginated list of entrepreneurs that failed to send to SQB",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "entrepreneurs"
+                ],
+                "summary": "Get entrepreneurs with SQB errors",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Limit (default 20, max 100)",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Offset (default 0)",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Failed entrepreneurs list",
+                        "schema": {
+                            "$ref": "#/definitions/dto.EntrepreneurListResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/entrepreneurs/sqb-retry": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Fetches all entrepreneurs with sqb_api_error and resends them to SQB. Clears the error on success.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "entrepreneurs"
+                ],
+                "summary": "Retry sending failed entrepreneurs to SQB",
+                "responses": {
+                    "200": {
+                        "description": "Retry results",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/entrepreneurs/{id}": {
             "get": {
                 "security": [
@@ -1514,6 +1603,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "registration_number": {
+                    "type": "string"
+                },
+                "sqb_api_error": {
                     "type": "string"
                 }
             }
