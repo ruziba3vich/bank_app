@@ -223,9 +223,10 @@ func (s *Syncer) sync(ctx context.Context) error {
 func (s *Syncer) mapToCreateInput(item ListItem, detail *Detail) appent.CreateInput {
 	inn := strconv.FormatInt(item.TIN, 10)
 
-	// Director name from manager
-	directorName := ""
-	if detail.Manager != nil {
+	// Director / full name — prefer the top-level full_name field,
+	// fall back to manager first+last+middle when full_name is empty.
+	directorName := strings.TrimSpace(detail.FullName)
+	if directorName == "" && detail.Manager != nil {
 		parts := []string{}
 		if detail.Manager.LastName != "" {
 			parts = append(parts, detail.Manager.LastName)

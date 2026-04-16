@@ -38,9 +38,10 @@ type ListResponse struct {
 
 // Detail represents the full entity detail from the detail endpoint.
 type Detail struct {
-	ID          int   `json:"id"`
-	TIN         int64 `json:"tin"`
+	ID          int    `json:"id"`
+	TIN         int64  `json:"tin"`
 	Name        string `json:"name"`
+	FullName    string `json:"full_name"`
 	BusinessType struct {
 		ID   int    `json:"id"`
 		Name string `json:"name"`
