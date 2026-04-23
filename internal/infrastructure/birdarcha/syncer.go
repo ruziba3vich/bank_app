@@ -190,7 +190,12 @@ func (s *Syncer) sync(ctx context.Context) error {
 		// Create via entrepreneur service (also sends to SQB)
 		_, err = s.entrepreneurService.Create(ctx, input)
 		if err != nil {
-			if strings.Contains(err.Error(), "duplicate") || strings.Contains(err.Error(), "already exists") {
+			msg := err.Error()
+			if strings.Contains(msg, "duplicate key") ||
+				strings.Contains(msg, "duplicate") ||
+				strings.Contains(msg, "already exists") ||
+				strings.Contains(msg, "entrepreneurs_inn_source_uniq") ||
+				strings.Contains(msg, "SQLSTATE 23505") {
 				log.Printf("birdarcha-syncer: skipped duplicate tin=%d name=%s", item.TIN, item.Name)
 				skipped++
 			} else {
