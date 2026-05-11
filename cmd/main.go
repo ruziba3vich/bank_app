@@ -87,7 +87,7 @@ func main() {
 	innHandler := handler.NewInnHandler(innService)
 	ifutCodeHandler := handler.NewIfutCodeHandler(ifutCodeService)
 	entrepreneurHandler := handler.NewEntrepreneurHandler(entrepreneurService)
-	router := api.NewRouter(userHandler, cityHandler, innHandler, ifutCodeHandler, entrepreneurHandler, jwtService)
+	router := api.NewRouter(userHandler, cityHandler, innHandler, ifutCodeHandler, entrepreneurHandler, jwtService, cfg.BirdarchaAPIKey)
 
 	log.Printf("Starting server on port %s", cfg.ServerPort)
 	if err := router.Run(":" + cfg.ServerPort); err != nil {

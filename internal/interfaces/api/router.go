@@ -13,7 +13,7 @@ import (
 	"github.com/prodonik/bank_app/internal/interfaces/api/middleware"
 )
 
-func NewRouter(userHandler *handler.UserHandler, cityHandler *handler.CityHandler, innHandler *handler.InnHandler, ifutCodeHandler *handler.IfutCodeHandler, entrepreneurHandler *handler.EntrepreneurHandler, jwtService *auth.JWTService) *gin.Engine {
+func NewRouter(userHandler *handler.UserHandler, cityHandler *handler.CityHandler, innHandler *handler.InnHandler, ifutCodeHandler *handler.IfutCodeHandler, entrepreneurHandler *handler.EntrepreneurHandler, jwtService *auth.JWTService, birdarchaAPIKey string) *gin.Engine {
 	r := gin.Default()
 
 	r.Use(cors.New(cors.Config{
@@ -73,16 +73,23 @@ func NewRouter(userHandler *handler.UserHandler, cityHandler *handler.CityHandle
 		}
 
 		entrepreneurs := v1.Group("/entrepreneurs")
-		entrepreneurs.Use(middleware.AuthMiddleware(jwtService))
 		{
-			entrepreneurs.POST("", entrepreneurHandler.Create)
-			entrepreneurs.GET("", entrepreneurHandler.GetAll)
-			entrepreneurs.GET("/sqb-failed", entrepreneurHandler.GetSqbFailed)
-			entrepreneurs.POST("/sqb-retry", entrepreneurHandler.RetrySqbFailed)
-			entrepreneurs.PUT("/birdarcha-token", entrepreneurHandler.UpdateBirdarchaToken)
-			entrepreneurs.GET("/:id", entrepreneurHandler.GetByID)
-			entrepreneurs.PUT("/:id", entrepreneurHandler.Update)
-			entrepreneurs.DELETE("/:id", entrepreneurHandler.Delete)
+			entrepreneurs.PUT("/birdarcha-token",
+				middleware.APIKeyOrAuth(jwtService, birdarchaAPIKey),
+				entrepreneurHandler.UpdateBirdarchaToken,
+			)
+
+			authed := entrepreneurs.Group("")
+			authed.Use(middleware.AuthMiddleware(jwtService))
+			{
+				authed.POST("", entrepreneurHandler.Create)
+				authed.GET("", entrepreneurHandler.GetAll)
+				authed.GET("/sqb-failed", entrepreneurHandler.GetSqbFailed)
+				authed.POST("/sqb-retry", entrepreneurHandler.RetrySqbFailed)
+				authed.GET("/:id", entrepreneurHandler.GetByID)
+				authed.PUT("/:id", entrepreneurHandler.Update)
+				authed.DELETE("/:id", entrepreneurHandler.Delete)
+			}
 		}
 	}
 

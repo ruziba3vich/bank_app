@@ -1,0 +1,22 @@
+{
+  "manifest_version": 3,
+  "name": "Birdarcha Token Refresher",
+  "version": "1.0.0",
+  "description": "Periodically extracts the birdarcha access token and pushes it to bank-app.",
+  "permissions": ["alarms", "storage", "scripting", "tabs"],
+  "host_permissions": [
+    "https://office.birdarcha.uz/*",
+    "https://api.birdarcha.uz/*",
+    "https://bank-app-back.compile-me.uz/*",
+    "http://46.8.176.85/*",
+    "http://46.8.176.85:8080/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "options_page": "options.html",
+  "action": {
+    "default_title": "Birdarcha Token Refresher",
+    "default_popup": "popup.html"
+  }
+}

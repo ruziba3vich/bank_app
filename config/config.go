@@ -27,6 +27,7 @@ type Config struct {
 	BirdarchaBaseURL      string
 	BirdarchaSyncInterval time.Duration
 	BirdarchaCutoffDate   string
+	BirdarchaAPIKey       string
 }
 
 func (c *Config) DatabaseURL() string {
@@ -74,6 +75,7 @@ func Load() (*Config, error) {
 		BirdarchaBaseURL:      getEnv("BIRDARCHA_BASE_URL", "https://api.birdarcha.uz"),
 		BirdarchaSyncInterval: birdarchaInterval,
 		BirdarchaCutoffDate:   getEnv("BIRDARCHA_CUTOFF_DATE", "15.04.2026"),
+		BirdarchaAPIKey:       getEnv("BIRDARCHA_API_KEY", ""),
 	}
 
 	if cfg.JWTSecret == "" {
