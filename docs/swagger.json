@@ -6,7 +6,7 @@
         "contact": {},
         "version": "1.0"
     },
-    "host": "bank-app-back.compile-me.uz",
+    "host": "bank-back.shoha-coder.uz",
     "basePath": "/api/v1",
     "paths": {
         "/cities": {

@@ -7,7 +7,7 @@
   "host_permissions": [
     "https://office.birdarcha.uz/*",
     "https://api.birdarcha.uz/*",
-    "https://bank-app-back.compile-me.uz/*",
+    "https://bank-back.shoha-coder.uz/*",
     "http://46.8.176.85/*",
     "http://46.8.176.85:8080/*"
   ],

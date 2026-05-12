@@ -27,7 +27,7 @@ import (
 // @title Bank App API
 // @version 1.0
 // @description Authentication service for the Bank App
-// @host bank-app-back.compile-me.uz
+// @host bank-back.shoha-coder.uz
 // @BasePath /api/v1
 // @securityDefinitions.apikey BearerAuth
 // @in header

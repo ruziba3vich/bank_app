@@ -310,7 +310,7 @@ definitions:
       status:
         type: boolean
     type: object
-host: bank-app-back.compile-me.uz
+host: bank-back.shoha-coder.uz
 info:
   contact: {}
   description: Authentication service for the Bank App

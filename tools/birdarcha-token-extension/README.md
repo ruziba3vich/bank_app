@@ -12,7 +12,7 @@ an `X-Api-Key` header.
 3. Click **Load unpacked** → select this directory
 4. Click the extension's icon → **Options**
 5. Fill in:
-   - **Bank-app base URL** — e.g. `https://bank-app-back.compile-me.uz`
+   - **Bank-app base URL** — e.g. `https://bank-back.shoha-coder.uz`
    - **X-Api-Key** — value of `BIRDARCHA_API_KEY` from the server's `.env`
    - **Refresh interval (minutes)** — 180 (= 3h) is a sensible default since
      the JWT TTL is ~4h
